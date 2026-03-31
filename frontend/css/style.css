@@ -621,13 +621,18 @@ html, body {
 /* Article page */
 .article-page {
     max-width: 1100px;
-    margin: 30px auto 60px;
+    margin: 0px auto 60px;
     padding: 0 20px;
 }
 
+/* Centered article content */
 .article-content {
     background-color: var(--main);
     border: 1px solid #e6e6e6;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 800px;
+    display: block;
 }
 
 .article-hero {
@@ -696,6 +701,8 @@ html, body {
 
 .article-page .article-title {
     color: var(--dark);
+    font-family: var(--Main);
+    font-size: 3em;
 }
 
 .article-overlay .article-title {
@@ -836,17 +843,17 @@ body {
     flex-shrink: 0;
     border: 2px solid var(--main);
     margin: -15px 0;
-    line-height: 1;
+    /* Laat de kaart automatisch meegroeien met de inhoud */
     display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 80px;
-    width: 80px;
-}
-
-.nav-menu {
-    display: flex;
-    list-style: none;
+    flex-direction: column;
+    border: 2px solid #e6e6e6;
+    box-sizing: border-box;
+    overflow: hidden;
+    background: var(--main);
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    height: auto;
     gap: 0;
     margin: 0;
 }
@@ -1064,7 +1071,7 @@ body {
 
 .small-stack .article-card.small-item,
 .small-stack .article-card-text.small-item {
-    height: calc((560px - 20px) / 2);
+    border: 0px solid transparent !important;
 }
 
 .standaard-row.small-stack-3-row {
@@ -1217,19 +1224,25 @@ body {
 
 /* Article Card Styling */
 /* Klein Nieuws Article Card Customization */
+/* Klein Nieuws Article Card Customization */
+/* Klein Nieuws Article Card Customization */
 .article-card {
     position: relative;
-    overflow: hidden;
+    overflow: visible;
     background-color: var(--main);
     color: #fff !important;
     cursor: pointer;
     transition: outline-color 0.25s ease, background-color 0.25s ease;
     border-radius: 0 !important;
     box-shadow: none !important;
-    height: 260px; /* Changed height for different look */
+    min-height: 180px;
+    height: auto;
     width: 100%;
     border: 2px solid #e6e6e6;
-}
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}   
 
 /* Ensure text inside klein nieuws articles is white */
 .klein-nieuws-section .article-card,
@@ -1237,7 +1250,6 @@ body {
 .klein-nieuws-section .article-card-text,
 .klein-nieuws-section .article-card-text * {
     color: #fff !important;
-}
 }
 
 .side-column .klein-nieuws-section .article-card,
@@ -1258,14 +1270,16 @@ body {
     align-items: stretch;
 }
 
+/* Add margin-bottom for more distance below the text */
 .article-text-block {
     padding: 24px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    justify-content: center;
-    width: 100%;
-    text-align: center;
+        gap: 8px;
+        justify-content: center;
+        width: 100%;
+        text-align: center;
+        margin-bottom: 12px;
 }
 
 .article-card-text .article-label {
@@ -1287,23 +1301,40 @@ body {
     border-color: var(--third);
 }
 
+/* Match card aspect ratio to image (16:9) */
+/* Limit large article card size */
 .article-card.large-item {
-    height: calc(9/16 * 110%);
+    aspect-ratio: 16 / 9;
     width: 100%;
-    max-width: none;
+    max-width: 600px;
+    max-height: 340px;
+    height: auto;
 }
 
+/* Consistent border for all klein nieuws articles */
+/* Fix small article card layout and border */
+/* Fix border for small articles so it stays inside the grid */
 .article-card.small-item {
-    height: auto;
+    min-height: 0;
     display: flex;
     flex-direction: column;
-    border: none;
-    background: transparent;
+    border: 2px solid #e6e6e6;
+    box-sizing: border-box;
+    overflow: hidden;
+    background: var(--main);
+    width: 100%;
+    max-width: none;
+    margin: 0;
+/* Zorg dat afbeelding bovenaan staat, tekst eronder, en kaart groeit mee */
+    height: auto;
 }
 
+/* Limit image size in articles */
 .article-image {
     width: 100%;
-    height: 100%;
+    max-width: 600px;
+    height: auto;
+    max-height: 340px;
     object-fit: cover;
     display: block;
     transition: filter 0.35s ease;
@@ -1327,7 +1358,6 @@ body {
     flex-direction: column;
     justify-content: flex-end;
     transition: background 0.35s ease;
-    min-height: 120px;
 }
 
 .article-card:hover .article-image {
@@ -1344,51 +1374,55 @@ body {
     );
 }
 
+/* Ensure image fits inside card and doesn't overflow */
 .article-card.small-item .article-image {
     width: 100%;
+    max-width: 100%;
     object-fit: cover;
     background-color: var(--main);
+    border: none;
+    display: block;
 }
 
+
+/* Fix overlay for small articles: no border, no overflow, fits parent */
+/* Zorg dat tekst altijd onder de afbeelding staat en zichtbaar is */
 .article-card.small-item .article-overlay {
     position: static;
     background: none;
     min-height: 0;
-    padding: 0;
+    padding: 8px 12px 12px 12px;
     color: var(--third);
-    display: flex;
-    flex-direction: column;
-}
-
-.article-card.small-item .article-label {
-    background-color: var(--third);
-    color: var(--main);
-    padding: 5px 12px;
-    margin: -28px 0 8px 0;
-    position: relative;
-    z-index: 2;
-    width: fit-content;
-    font-size: 10px;
-    line-height: 1.1;
+    display: block;
+    border: none !important;
+    box-shadow: none !important;
+    height: auto;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    z-index: 1;
+    font-size: 1rem;
+    line-height: 1.3;
     letter-spacing: 0.2px;
 }
 
 .article-card.small-item .article-title {
-    color: var(--third);
+    color: var(--third) !important;
     margin: 0;
     font-size: 0.95rem;
     line-height: 1.25;
     font-family: var(--BlackTitle);
     font-weight: 700;
-    display: -webkit-box;
-    line-clamp: 3;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
 }
 
 .article-card.small-item:hover .article-overlay {
     background: none;
+    z-index: 1;
 }
 
 .article-card-text:hover {
@@ -1396,7 +1430,7 @@ body {
     background-color: #0028cc;
     */
     background-color: #007e28;
-    border: 1px solid #ffffff;
+    border: 2px solid #e6e6e6;
 }
 
 .article-card-text:hover .article-text-title {
@@ -1801,7 +1835,8 @@ footer {
     }
     
     .article-card.large-item {
-        height: 250px;
+        aspect-ratio: 16 / 9;
+        height: auto;
     }
 }
 
@@ -2076,11 +2111,12 @@ footer {
 
     .shop-card-image-wrap,
     .shop-featured-media {
-        height: 240px;
+        height: 140px;
         min-height: 240px;
     }
 }
 
+    /* Afbeelding altijd bovenaan, vaste hoogte, breedte 100% */
 /* Shopping Cart Styles */
 .cart-icon-nav {
     position: relative;

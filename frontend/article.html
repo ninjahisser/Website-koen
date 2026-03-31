@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="nl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Artikel</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
+
 <body>
     <nav class="navbar">
-                <!--HVLN
+        <!--HVLN
         <div class="navbar-container">
             <div class="nav-top-bar">
                 <a href="/" class="logo" style="text-decoration: none; color: inherit;">HVLN</a>
@@ -21,19 +23,26 @@
                 </ul>
             </div>
             -->
-            <div class="nav-submenu">
-                <span>POLITIEK</span>
-                <span>SOCIAAL</span>
-                <span>GENT</span>
-                <span>ECONOMISCH</span>
-                <span>RECLAME</span>
-                <span>KRITIEK</span>
-            </div>
+
+        <figure class="logo_malem">
+            <img src="/img/studiomalem_header.png" alt="Studio Malem Logo" style="height: 40px;">
+        </figure>
+
+        <div class="nav-submenu">
+            <span>POLITIEK</span>
+            <span>SOCIAAL</span>
+            <span>GENT</span>
+            <span>ECONOMISCH</span>
+            <span>RECLAME</span>
+            <span>KRITIEK</span>
+        </div>
         </div>
     </nav>
 
     <main class="article-page">
-        <button onclick="history.back()" style="background-color: var(--third); color: white; border: none; padding: 10px 20px; font-weight: bold; cursor: pointer; margin-bottom: 20px; font-size: 14px;">← Terug</button>
+        <button onclick="history.back()"
+            style="background-color: var(--third); color: white; border: none; padding: 10px 20px; font-weight: bold; cursor: pointer; margin-bottom: 20px; font-size: 14px; position: fixed; margin: 10px;">←
+            Terug</button>
         <div id="article-loading" class="loading">Artikel laden...</div>
         <div id="article-error" class="error" style="display: none;"></div>
         <article id="article-content" class="article-content" style="display: none;"></article>
@@ -42,4 +51,5 @@
     <script src="/js/config.js"></script>
     <script src="/js/article.js"></script>
 </body>
+
 </html>
