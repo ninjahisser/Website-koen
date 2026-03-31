@@ -1,0 +1,30 @@
+{
+  "id": "article_016",
+  "title": "De NUMMER 1 vakantietips in het binnenland!",
+  "category": "POLITIEK",
+  "group": "de miniatuurwereld",
+  "size": "groot",
+  "components": [
+    {
+      "type": "image",
+      "src": "/images/article_016_0.png",
+      "alt": "Ministeriefoto"
+    },
+    {
+      "type": "text",
+      "content": "De minister van Economie heeft vandaag een reeks infrastructuurprojecten aangekondigd die gericht zijn op het verbeteren van de wegen en openbaar vervoer. Deze plannen zijn onderdeel van een breder stimuleringspakket."
+    },
+    {
+      "type": "text",
+      "content": "De eerste werken starten al in het voorjaar en zullen gefaseerd worden uitgevoerd."
+    },
+    {
+      "type": "video",
+      "src": "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
+      "autoplay": true,
+      "mute": true
+    }
+  ],
+  "created_at": "2026-02-21T10:30:00",
+  "updated_at": "2026-03-02T23:27:34.060757"
+}

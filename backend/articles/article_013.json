@@ -1,0 +1,24 @@
+{
+  "id": "article_013",
+  "title": "Fietsen fietsen fietsen!",
+  "category": "ECONOMISCH",
+  "size": "klein",
+  "components": [
+    {
+      "type": "image",
+      "src": "/images/article_013_0.png",
+      "alt": "Economie"
+    },
+    {
+      "type": "text",
+      "content": "De Vlaamse economie groeit sterker dan verwacht, met name in tech- en groene sectoren."
+    },
+    {
+      "type": "text",
+      "content": "Exportcijfers zitten in de lift, terwijl binnenlandse investeringen opnieuw aantrekken."
+    }
+  ],
+  "created_at": "2026-02-12T12:15:00",
+  "updated_at": "2026-03-02T22:40:38.616520",
+  "group": "standaard"
+}

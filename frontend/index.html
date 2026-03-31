@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- <title>HetVoorlaatsteNieuws</title> -->
+    <!-- Studio malem --><title>Studio Malem</title>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="home-page">
+    <nav class="navbar">
+                        <!--HVLN
+
+        <div class="navbar-container">
+            <div class="nav-top-bar">
+                <a href="/" class="logo" style="text-decoration: none; color: inherit;">HVLN</a>
+                <ul class="nav-menu">
+                    <li><a href="/" class="nav-link active">NIEUW</a></li>
+                    <li><a href="/shop" class="nav-link">SHOP</a></li>
+                    <li><a href="#" class="nav-link">PROJECTEN</a></li>
+                    <li><a href="#" class="nav-link">SOCIALS</a></li>
+                    <li><a href="/cms" class="nav-link">CMS</a></li>
+                </ul>
+            </div>
+                            -->
+
+            <div class="nav-submenu">
+                <span>POLITIEK</span>
+                <span>SOCIAAL</span>
+                <span>GENT</span>
+                <span>ECONOMISCH</span>
+                <span>RECLAME</span>
+                <span>KRITIEK</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="content-wrapper">
+        <div class="hero-section">
+            <div class="hero-content">
+                <div class="hero-image" id="heroImage">
+                    <a id="heroLink" class="hero-link" href="#">
+                        <span id="heroTitle" class="hero-title"></span>
+                    </a>
+                </div>
+                <div class="hero-sidebar">
+                    <div class="sidebar-box">
+                        <h3 id="newsletterTitle">GEEN WERK MEER MISSEN?</h3>
+                        <p id="newsletterText">MELD JE AAN OF DE NIEUWSBRIEF</p>
+                        <!-- HVLN <input type="email" placeholder="E-MAIL" class="sidebar-email"> -->   
+                        <a id="newsletterButton" class="btn-blue" href="#">JA IK WIL DE NIEUWSBRIEF</a>
+                    </div>
+                    <!-- HVLN 
+                    <div class="sidebar-box workshop-box">
+                        <h3 id="workshopTitle">ONTDEK ONZE WORKSHOP SPEEDANIMATIE</h3>
+                        <p id="workshopText">Ik neem de allergrootste jaren workshops in SMAAK, designmuseum, scholen en veel meer!</p>
+                        <a id="workshopButton" class="btn-blue" href="#">IK WIL MEER WETEN</a>
+                    </div>
+                    -->
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="layout-row">
+                <div class="klein-column side-column" id="kleinContainer"></div>
+                <div class="main-column">
+                    <div class="loading" id="loading">Artikelen laden...</div>
+                    <div class="error" id="error" style="display: none;"></div>
+                    <div id="groupsContainer"></div>
+                </div>
+                <div class="mini-column side-column" id="miniContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <!-- HVLN
+        <div class="footer-top">
+            <div class="footer-logo">HVLN</div>
+            <div class="footer-title">Ontvang de nieuwsbrief</div>
+        </div>
+        -->
+        <div class="footer-content">
+            <div class="footer-input-section">
+                <input type="email" placeholder="E-MAIL" class="footer-email">
+            </div>
+            <div class="footer-sections">
+                <div class="footer-section">
+                    <h4>ALGEMEEN</h4>
+                    <ul>
+                        <li><a href="#">Wie ben Wij Annumie</a></li>
+                        <li><a href="#">Wat doen we</a></li>
+                        <li><a href="/shop">Shop</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>ABOUT</h4>
+                    <ul>
+                        <li><a href="#">Regels en producties</a></li>
+                        <li><a href="#">Annumeren</a></li>
+                        <li><a href="#">Faciliteiten</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>MEER</h4>
+                    <ul>
+                        <li><a href="#">Facebook</a></li>
+                        <li><a href="#">Instagram</a></li>
+                        <li><a href="/cms">CMS</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/config.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

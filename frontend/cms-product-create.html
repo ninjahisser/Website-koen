@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMS - Nieuw product</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="cms-page">
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="nav-top-bar">
+                <a href="/" class="logo" style="text-decoration: none; color: inherit;">HVLN CMS</a>
+                <ul class="nav-menu">
+                    <li><a href="/cms" class="nav-link">Dashboard</a></li>
+                    <li><a href="/shop" class="nav-link">Shop</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="content-wrapper">
+        <h1 class="cms-title">Nieuw product</h1>
+        <div id="product-create-status" class="cms-status"></div>
+        <form id="product-create-form" class="cms-form">
+            <div class="cms-field-grid">
+                <div class="cms-form-row">
+                    <label for="title">Titel</label>
+                    <input id="title" type="text" class="cms-input" required>
+                </div>
+                <div class="cms-form-row">
+                    <label for="subtitle">Subtitel</label>
+                    <input id="subtitle" type="text" class="cms-input">
+                </div>
+                <div class="cms-form-row">
+                    <label for="category">Categorie</label>
+                    <input id="category" type="text" class="cms-input">
+                </div>
+                <div class="cms-form-row">
+                    <label for="badge">Badge</label>
+                    <input id="badge" type="text" class="cms-input" placeholder="Nieuw, Bestseller, Limited...">
+                </div>
+                <div class="cms-form-row">
+                    <label for="price_eur">Prijs in euro</label>
+                    <input id="price_eur" type="number" min="0" step="0.01" class="cms-input" required>
+                </div>
+                <div class="cms-form-row">
+                    <label for="cta_label">Knoptekst</label>
+                    <input id="cta_label" type="text" class="cms-input" value="Koop nu">
+                </div>
+            </div>
+
+            <div class="cms-form-row">
+                <label for="short_description">Korte omschrijving</label>
+                <textarea id="short_description" rows="3" class="cms-textarea"></textarea>
+            </div>
+            <div class="cms-form-row">
+                <label for="description">Volledige omschrijving</label>
+                <textarea id="description" rows="5" class="cms-textarea"></textarea>
+            </div>
+            <div class="cms-form-row">
+                <label for="image">Afbeelding URL</label>
+                <input id="image" type="text" class="cms-input" placeholder="https://... of /images/...">
+                <input id="image-file" type="file" class="cms-input" accept="image/*">
+                <div id="image-upload-status" class="shop-upload-note"></div>
+                <div id="image-preview" class="shop-image-preview"></div>
+            </div>
+            <div class="cms-actions">
+                <label class="shop-toggle"><input id="featured" type="checkbox"> Uitgelicht product</label>
+                <label class="shop-toggle"><input id="active" type="checkbox" checked> Actief</label>
+            </div>
+            <div class="cms-actions">
+                <button type="submit" class="cms-button">Product aanmaken</button>
+                <a href="/cms" class="cms-button cms-button-secondary">Annuleren</a>
+            </div>
+        </form>
+    </div>
+
+    <script src="/js/config.js"></script>
+    <script>
+        if (!USE_LOCAL_API && !window.location.hostname.includes('pythonanywhere.com')) {
+            window.location.replace(PRODUCTION_BACKEND_URL + '/cms-product-create');
+        }
+    </script>
+    <script src="/js/cms-product-create.js"></script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+{
+  "id": "article_008",
+  "title": "Lekker zitten met een plant!",
+  "category": "RECLAME",
+  "size": "groot",
+  "components": [
+    {
+      "type": "image",
+      "src": "/images/article_008_0.png",
+      "alt": "Reclame award"
+    },
+    {
+      "type": "text",
+      "content": "Een Belgisch reclamebureau behaalt goud op het internationale festival voor creativiteit."
+    },
+    {
+      "type": "text",
+      "content": "De campagne werd geprezen voor haar sterke verhaalopbouw en herkenbare menselijke momenten."
+    }
+  ],
+  "created_at": "2026-02-17T16:45:00",
+  "updated_at": "2026-03-02T22:38:30.603394",
+  "group": "standaard"
+}

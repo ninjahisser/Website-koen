@@ -1,0 +1,30 @@
+{
+  "id": "article_003",
+  "title": "Auto gaat vroem vroem!",
+  "category": "RECREATIE",
+  "size": "klein",
+  "components": [
+    {
+      "type": "video",
+      "src": "https://www.youtube.com/watch?v=YQHsXMglC9A",
+      "autoplay": false,
+      "mute": true
+    },
+    {
+      "type": "image",
+      "src": "/images/article_003_0.png",
+      "alt": "Vakantiebestemming binnenland"
+    },
+    {
+      "type": "text",
+      "content": "Met de zomervakantie in zicht, is het tijd om inspiratie op te doen voor je volgende avontuur. Dit artikel presenteert de top vakantiebestemmingen in het Belgische binnenland."
+    },
+    {
+      "type": "text",
+      "content": "Van rustige natuurpaden tot stedentrips met cultuur: er is dit jaar opvallend veel keuze dichtbij huis."
+    }
+  ],
+  "created_at": "2026-02-15T09:15:00",
+  "updated_at": "2026-03-02T22:39:36.951073",
+  "group": "standaard"
+}

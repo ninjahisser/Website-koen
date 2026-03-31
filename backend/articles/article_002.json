@@ -1,0 +1,30 @@
+{
+  "id": "article_002",
+  "title": "Steen ontgraven?",
+  "category": "SOCIAAL",
+  "size": "klein",
+  "components": [
+    {
+      "type": "video",
+      "src": "https://www.youtube.com/watch?v=OPf0YbXqDm0",
+      "autoplay": false,
+      "mute": false
+    },
+    {
+      "type": "image",
+      "src": "/images/article_002_0.png",
+      "alt": "Halfvastenfoor attracties"
+    },
+    {
+      "type": "text",
+      "content": "Het Halfvastenfoor is een van de populairste evenementen in BelgiÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«. Met meer dan 30 attracties en een rijke geschiedenis, biedt dit evenement plezier voor het hele gezin."
+    },
+    {
+      "type": "text",
+      "content": "Nieuwe foodtrucks en een avondprogramma met live muziek zorgen dit jaar voor extra bezoekers."
+    }
+  ],
+  "created_at": "2026-02-18T14:30:00",
+  "updated_at": "2026-03-02T22:37:33.883611",
+  "group": "het klein nieuws"
+}

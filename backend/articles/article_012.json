@@ -1,0 +1,24 @@
+{
+  "id": "article_012",
+  "title": "Van Eyck protest!",
+  "category": "GENT",
+  "size": "klein",
+  "components": [
+    {
+      "type": "image",
+      "src": "/images/article_012_0.png",
+      "alt": "Fietspad Leie"
+    },
+    {
+      "type": "text",
+      "content": "15 kilometer nieuw fietspad verbindt centrum Gent met dorpen langs de Leie."
+    },
+    {
+      "type": "text",
+      "content": "De route is ontworpen met veilige kruispunten en extra rustplaatsen onderweg."
+    }
+  ],
+  "created_at": "2026-02-13T15:00:00",
+  "updated_at": "2026-03-02T22:40:15.562385",
+  "group": "standaard"
+}

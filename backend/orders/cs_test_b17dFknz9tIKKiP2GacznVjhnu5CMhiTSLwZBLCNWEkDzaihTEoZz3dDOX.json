@@ -1,0 +1,100 @@
+{
+  "id": "cs_test_b17dFknz9tIKKiP2GacznVjhnu5CMhiTSLwZBLCNWEkDzaihTEoZz3dDOX",
+  "stripe_session_id": "cs_test_b17dFknz9tIKKiP2GacznVjhnu5CMhiTSLwZBLCNWEkDzaihTEoZz3dDOX",
+  "customer_email": "",
+  "items": [
+    {
+      "product_id": "product_002",
+      "product_title": "Workshop Toolkit",
+      "price_cents": 4900,
+      "quantity": 1,
+      "subtotal_cents": 4900
+    }
+  ],
+  "total_cents": 4900,
+  "status": "processing",
+  "created_at": "2026-03-21T22:00:13.919282",
+  "metadata": {
+    "payment_status": "paid",
+    "payment_intent": {
+      "id": "pi_3TDWcq3U6pxUT3EF1vjG4pi4",
+      "object": "payment_intent",
+      "amount": 4900,
+      "amount_capturable": 0,
+      "amount_details": {
+        "shipping": {
+          "amount": 0,
+          "from_postal_code": null,
+          "to_postal_code": null
+        },
+        "tax": {
+          "total_tax_amount": 0
+        },
+        "tip": {}
+      },
+      "amount_received": 4900,
+      "application": null,
+      "application_fee_amount": null,
+      "automatic_payment_methods": null,
+      "canceled_at": null,
+      "cancellation_reason": null,
+      "capture_method": "automatic_async",
+      "client_secret": "pi_3TDWcq3U6pxUT3EF1vjG4pi4_secret_laYYvvReBBWyPOTzO68B8oGeq",
+      "confirmation_method": "automatic",
+      "created": 1774126804,
+      "currency": "eur",
+      "customer": null,
+      "customer_account": null,
+      "description": null,
+      "excluded_payment_method_types": null,
+      "last_payment_error": null,
+      "latest_charge": "py_3TDWcq3U6pxUT3EF1LnYpmgX",
+      "livemode": false,
+      "metadata": {},
+      "next_action": null,
+      "on_behalf_of": null,
+      "payment_details": {
+        "customer_reference": null,
+        "order_reference": "cs_test_b17dFknz9tIKKiP2GacznVjhnu5CMhiTSLwZBLCNWEkDzaihTEoZz3dDOX"
+      },
+      "payment_method": "pm_1TDWcq3U6pxUT3EF8JNrnoee",
+      "payment_method_configuration_details": null,
+      "payment_method_options": {
+        "bancontact": {
+          "preferred_language": "en"
+        }
+      },
+      "payment_method_types": [
+        "bancontact"
+      ],
+      "processing": null,
+      "receipt_email": null,
+      "review": null,
+      "setup_future_usage": null,
+      "shipping": null,
+      "source": null,
+      "statement_descriptor": null,
+      "statement_descriptor_suffix": null,
+      "status": "succeeded",
+      "transfer_data": null,
+      "transfer_group": null
+    },
+    "currency": "eur",
+    "amount_total": 4900,
+    "amount_subtotal": 4900,
+    "customer_name": "seth"
+  },
+  "shipping_address": {
+    "name": "seth",
+    "address": {
+      "city": null,
+      "country": null,
+      "line1": null,
+      "line2": null,
+      "postal_code": null,
+      "state": null
+    },
+    "phone": null
+  },
+  "updated_at": "2026-03-21T22:03:13.412488"
+}

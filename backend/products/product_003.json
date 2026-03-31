@@ -1,0 +1,17 @@
+{
+  "id": "product_003",
+  "title": "Limited Zine Edition",
+  "subtitle": "Genummerde oplage",
+  "short_description": "Een kleine, fysieke publicatie met essays en beeld.",
+  "description": "48 pagina's, genummerde oplage en gedrukt op ruw papier. Deze editie bundelt artikelen, beeldfragmenten en schetsen uit recente projecten.",
+  "category": "Publicatie",
+  "badge": "Limited",
+  "image": "https://placehold.co/900x1200/FFFFFF/000000?text=Limited+Zine",
+  "cta_label": "Reserveer editie",
+  "price_cents": 1800,
+  "currency": "eur",
+  "featured": false,
+  "active": true,
+  "created_at": "2026-03-21T10:10:00",
+  "updated_at": "2026-03-21T10:10:00"
+}

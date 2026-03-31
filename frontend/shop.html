@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HVLN Shop</title>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="shop-page">
+    <nav class="navbar minimal-navbar"></nav>
+    <a href="/cart" class="floating-cart-btn" id="floating-cart-btn">
+        Winkelmand <span id="cart-badge" class="cart-badge">0</span>
+    </a>
+
+    <main class="content-wrapper shop-wrapper minimal-shop-wrapper">
+        <div id="shop-status" class="cms-status" style="display: none;"></div>
+        <div id="products-grid" class="shop-grid">
+            <div class="loading">Producten laden...</div>
+        </div>
+    </main>
+
+    <footer class="minimal-footer">
+        <div style="text-align:center; color:#bbb; font-size:13px; padding:24px 0 0 0;">&copy; Shop</div>
+    </footer>
+
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="/js/config.js"></script>
+    <script src="/js/cart.js"></script>
+    <script src="/js/shop.js"></script>
+</body>
+</html>

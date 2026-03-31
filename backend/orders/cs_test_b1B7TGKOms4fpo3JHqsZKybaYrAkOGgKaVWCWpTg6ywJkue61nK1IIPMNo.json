@@ -1,0 +1,119 @@
+{
+  "id": "cs_test_b1B7TGKOms4fpo3JHqsZKybaYrAkOGgKaVWCWpTg6ywJkue61nK1IIPMNo",
+  "stripe_session_id": "cs_test_b1B7TGKOms4fpo3JHqsZKybaYrAkOGgKaVWCWpTg6ywJkue61nK1IIPMNo",
+  "customer_email": "trs.tes@hotmail.com",
+  "items": [
+    {
+      "product_id": "7b441d61",
+      "product_title": "Fortnite",
+      "price_cents": 10000,
+      "quantity": 1,
+      "subtotal_cents": 10000
+    },
+    {
+      "product_id": "product_001",
+      "product_title": "Editorial Poster Pack Test",
+      "price_cents": 2900,
+      "quantity": 2,
+      "subtotal_cents": 5800
+    }
+  ],
+  "total_cents": 15800,
+  "status": "pending",
+  "created_at": "2026-03-23T23:59:40.975031",
+  "metadata": {
+    "payment_status": "paid",
+    "payment_intent": {
+      "id": "pi_3TEHRI3U6pxUT3EF1X1koqWw",
+      "object": "payment_intent",
+      "amount": 15800,
+      "amount_capturable": 0,
+      "amount_details": {
+        "shipping": {
+          "amount": 0,
+          "from_postal_code": null,
+          "to_postal_code": null
+        },
+        "tax": {
+          "total_tax_amount": 0
+        },
+        "tip": {}
+      },
+      "amount_received": 15800,
+      "application": null,
+      "application_fee_amount": null,
+      "automatic_payment_methods": null,
+      "canceled_at": null,
+      "cancellation_reason": null,
+      "capture_method": "automatic_async",
+      "client_secret": "pi_3TEHRI3U6pxUT3EF1X1koqWw_secret_jzkhiG6uuBRiQSABMb6TUAoHi",
+      "confirmation_method": "automatic",
+      "created": 1774306756,
+      "currency": "eur",
+      "customer": null,
+      "customer_account": null,
+      "description": null,
+      "excluded_payment_method_types": null,
+      "last_payment_error": null,
+      "latest_charge": "py_3TEHRI3U6pxUT3EF1NOtzdCk",
+      "livemode": false,
+      "metadata": {},
+      "next_action": null,
+      "on_behalf_of": null,
+      "payment_details": {
+        "customer_reference": null,
+        "order_reference": "cs_test_b1B7TGKOms4fpo3JHqsZKybaYrAkOGgKaVWCWpTg6ywJkue61nK1IIPMNo"
+      },
+      "payment_method": "pm_1TEHRI3U6pxUT3EFtwgDkNY7",
+      "payment_method_configuration_details": null,
+      "payment_method_options": {
+        "bancontact": {
+          "preferred_language": "en"
+        }
+      },
+      "payment_method_types": [
+        "bancontact"
+      ],
+      "processing": null,
+      "receipt_email": null,
+      "review": null,
+      "setup_future_usage": null,
+      "shipping": {
+        "address": {
+          "city": "Gent",
+          "country": "BE",
+          "line1": "Ter Hand 4",
+          "line2": null,
+          "postal_code": "9041",
+          "state": null
+        },
+        "carrier": null,
+        "name": "seth",
+        "phone": null,
+        "tracking_number": null
+      },
+      "source": null,
+      "statement_descriptor": null,
+      "statement_descriptor_suffix": null,
+      "status": "succeeded",
+      "transfer_data": null,
+      "transfer_group": null
+    },
+    "currency": "eur",
+    "amount_total": 15800,
+    "amount_subtotal": 15800,
+    "customer_name": "seth"
+  },
+  "shipping_address": {
+    "name": "seth",
+    "address": {
+      "city": "Gent",
+      "country": "BE",
+      "line1": "Ter Hand 4",
+      "line2": null,
+      "postal_code": "9041",
+      "state": null
+    },
+    "phone": null
+  }
+}

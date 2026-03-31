@@ -1,0 +1,17 @@
+{
+  "id": "7b441d61",
+  "title": "Fortnite",
+  "subtitle": "Fortnite",
+  "short_description": "Dit is iets",
+  "description": "DIt is ook iets",
+  "category": "Pipi",
+  "badge": "NIEUW",
+  "image": "",
+  "cta_label": "Koop nu",
+  "price_cents": 10000,
+  "currency": "eur",
+  "featured": true,
+  "active": true,
+  "created_at": "2026-03-21T20:16:54.084465",
+  "updated_at": "2026-03-21T20:16:54.084465"
+}

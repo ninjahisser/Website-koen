@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMS - Content en shop</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="cms-page">
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="nav-top-bar">
+                <a href="/" class="logo" style="text-decoration: none; color: inherit;">HVLN CMS</a>
+                <ul class="nav-menu">
+                    <li><a href="/" class="nav-link">Site</a></li>
+                    <li><a href="/shop" class="nav-link">Shop</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="content-wrapper">
+        <h1 class="cms-title">CMS beheer</h1>
+        <div class="cms-tabs">
+            <button class="cms-tab-btn active" data-tab="cms-tab-orders">Bestellingen</button>
+            <button class="cms-tab-btn" data-tab="cms-tab-products">Shop-producten</button>
+            <button class="cms-tab-btn" data-tab="cms-tab-content">Content</button>
+            <button class="cms-tab-btn" data-tab="cms-tab-stats">Statistieken</button>
+            <button class="cms-tab-btn" data-tab="cms-tab-homepage">Homepage</button>
+        </div>
+        <div id="cms-tab-orders" class="cms-tab-content">
+            <section id="cms-orders" class="cms-section">
+                <div class="cms-section-header">
+                    <h2>Bestellingen</h2>
+                    <button id="refresh-orders-btn" class="cms-button">Vernieuwen</button>
+                </div>
+                <p class="cms-section-note">Recente bestellingen via Stripe checkout.</p>
+                <div id="orders-container">
+                    <p>Bestellingen laden...</p>
+                </div>
+            </section>
+        </div>
+        <div id="cms-tab-products" class="cms-tab-content" style="display:none;">
+            <section id="cms-products" class="cms-section">
+                <div class="cms-section-header">
+                    <div>
+                        <h2>Shopproducten</h2>
+                        <p class="cms-section-note">Voeg producten toe die op de shop-pagina verschijnen en via Stripe afgerekend worden.</p>
+                    </div>
+                    <button id="add-product-btn" class="cms-button">Nieuw product toevoegen</button>
+                </div>
+                <div id="products-container"></div>
+            </section>
+        </div>
+        <div id="cms-tab-content" class="cms-tab-content" style="display:none;">
+            <section id="cms-articles" class="cms-section">
+                <div class="cms-section-header">
+                    <h2>Artikels</h2>
+                    <button id="add-article-btn" class="cms-button">Nieuw artikel toevoegen</button>
+                </div>
+                <div id="articles-container"></div>
+            </section>
+        </div>
+        <div id="cms-tab-stats" class="cms-tab-content" style="display:none;">
+            <section id="cms-stats" class="cms-section">
+                <h2>Statistieken</h2>
+                <div id="stats-container"></div>
+            </section>
+        </div>
+        <div id="cms-tab-homepage" class="cms-tab-content" style="display:none;">
+            <section id="cms-homepage" class="cms-section">
+                <h2>Homepage sidebar</h2>
+                <!-- HVLN <div class="cms-field-grid"> -->
+                    <div class="cms-form-row">
+                        <label for="newsletterTitleInput">Nieuwsbrief titel</label>
+                        <input id="newsletterTitleInput" type="text" class="cms-input">
+                    </div>
+                    <div class="cms-form-row">
+                        <label for="newsletterTextInput">Nieuwsbrief tekst</label>
+                        <input id="newsletterTextInput" type="text" class="cms-input">
+                    </div>
+                    <div class="cms-form-row">
+                        <label for="newsletterButtonTextInput">Nieuwsbrief knop tekst</label>
+                        <input id="newsletterButtonTextInput" type="text" class="cms-input">
+                    </div>
+                    <div class="cms-form-row">
+                        <label for="newsletterButtonLinkInput">Nieuwsbrief knop link</label>
+                        <input id="newsletterButtonLinkInput" type="text" class="cms-input">
+                    </div>
+                    <!-- HVLN
+                    <div class="cms-form-row">
+                        <label for="workshopTitleInput">Workshop titel</label>
+                        <input id="workshopTitleInput" type="text" class="cms-input">
+                    </div>
+                    <div class="cms-form-row">
+                        <label for="workshopTextInput">Workshop tekst</label>
+                        <input id="workshopTextInput" type="text" class="cms-input">
+                    </div>
+                    <div class="cms-form-row">
+                        <label for="workshopButtonTextInput">Workshop knop tekst</label>
+                        <input id="workshopButtonTextInput" type="text" class="cms-input">
+                    </div>
+                    <div class="cms-form-row">
+                        <label for="workshopButtonLinkInput">Workshop knop link</label>
+                        <input id="workshopButtonLinkInput" type="text" class="cms-input">
+                    </div>
+                    -->
+                </div>
+                <div class="cms-actions">
+                    <button id="save-homepage-btn" class="cms-button">Opslaan</button>
+                    <span id="homepage-status" class="cms-status"></span>
+                </div>
+            </section>
+        </div>
+    </div>
+    <script src="/js/config.js"></script>
+    <script src="/js/cart.js"></script>
+    <script>
+        if (!USE_LOCAL_API && !window.location.hostname.includes('pythonanywhere.com')) {
+            window.location.replace(PRODUCTION_BACKEND_URL + '/cms');
+        }
+    </script>
+    <script src="/js/cms.js"></script>
+</body>
+</html>

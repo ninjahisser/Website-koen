@@ -1,0 +1,26 @@
+{
+  "id": "article_019",
+  "title": "Belgium for beginners: Ministerie van maskers!",
+  "category": "STANDAARD",
+  "group": "het klein nieuws",
+  "size": "tekst",
+  "components": [
+    {
+      "type": "text",
+      "content": "Een korte, krachtige headline die als volwaardig artikel in de layout verschijnt."
+    },
+    {
+      "type": "video",
+      "src": "https://www.youtube.com/watch?v=wX8FyHd4tUk",
+      "autoplay": true,
+      "mute": true
+    },
+    {
+      "type": "image",
+      "src": "/images/article_019_0.png",
+      "alt": ""
+    }
+  ],
+  "created_at": "2026-02-23T10:05:00",
+  "updated_at": "2026-03-02T23:31:57.843955"
+}

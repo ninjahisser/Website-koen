@@ -1,0 +1,17 @@
+{
+  "id": "product_001",
+  "title": "Editorial Poster Pack Test",
+  "subtitle": "Set van 3 grafische prints",
+  "short_description": "Een compacte set met drie posters in HVLN-stijl.",
+  "description": "Drie A3-posters op stevig papier met uitgesproken typografie en een blauw-zwart kleurenpalet. Ideaal voor studio, klaslokaal of winkelruimte.",
+  "category": "Prints",
+  "badge": "Bestseller",
+  "image": "https://placehold.co/900x1200/F5F5F5/0033FF?text=Poster+Pack+Test",
+  "cta_label": "Bestel poster pack",
+  "price_cents": 2900,
+  "currency": "eur",
+  "featured": true,
+  "active": true,
+  "created_at": "2026-03-21T10:00:00",
+  "updated_at": "2026-03-21T20:16:12.707278"
+}

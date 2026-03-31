@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMS - Artikel aanpassen</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="cms-page">
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="nav-top-bar">
+                <a href="/" class="logo" style="text-decoration: none; color: inherit;">HVLN CMS</a>
+                <ul class="nav-menu">
+                    <li><a href="/cms" class="nav-link">Dashboard</a></li>
+                    <li><a href="/cms-create" class="nav-link">Nieuw artikel</a></li>
+                    <li><a href="/cms-product-create" class="nav-link">Nieuw product</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="content-wrapper">
+        <h1 class="cms-title">Artikel aanpassen</h1>
+        <div id="edit-status" class="cms-status"></div>
+        <form id="edit-form" class="cms-form">
+            <div class="cms-form-row">
+                <label for="title">Titel</label>
+                <input id="title" name="title" type="text" class="cms-input" required>
+            </div>
+            <div class="cms-form-row">
+                <label for="category">Categorie</label>
+                <input id="category" name="category" type="text" class="cms-input">
+            </div>
+            <div class="cms-form-row">
+                <label for="group">Group</label>
+                <select id="group" name="group" class="cms-input"></select>
+                <input id="new-group" name="new-group" type="text" class="cms-input cms-input-muted" placeholder="Nieuwe groep naam" style="display: none;">
+            </div>
+            <div class="cms-form-row">
+                <label for="size">Size</label>
+                <select id="size" name="size" class="cms-input">
+                    <option value="klein">klein</option>
+                    <option value="groot">groot</option>
+                    <option value="tekst">tekst</option>
+                </select>
+            </div>
+            <div class="cms-form-row">
+                <label>Components</label>
+                <div class="components-editor">
+                    <div class="components-toolbar">
+                        <button type="button" class="cms-button cms-button-secondary" data-add="text">Tekst</button>
+                        <button type="button" class="cms-button cms-button-secondary" data-add="image">Afbeelding</button>
+                        <button type="button" class="cms-button cms-button-secondary" data-add="video">Video</button>
+                        <button type="button" class="cms-button cms-button-secondary" data-add="audio">Audio</button>
+                    </div>
+                    <div id="components-list" class="components-list"></div>
+                </div>
+            </div>
+            <div class="cms-actions">
+                <button type="submit" class="cms-button">Opslaan</button>
+                <a id="preview-link" href="#" class="cms-button cms-button-small" target="_blank" rel="noopener">Preview</a>
+                <a href="/cms" class="cms-button cms-button-secondary">Annuleren</a>
+            </div>
+        </form>
+    </div>
+
+    <script src="/js/config.js"></script>
+    <script>
+        if (!USE_LOCAL_API && !window.location.hostname.includes('pythonanywhere.com')) {
+            window.location.replace(PRODUCTION_BACKEND_URL + '/cms-edit' + window.location.search);
+        }
+    </script>
+    <script src="/js/cms-edit.js"></script>
+</body>
+</html>

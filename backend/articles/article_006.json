@@ -1,0 +1,30 @@
+{
+  "id": "article_006",
+  "title": "LACH OF IK SCHIET!",
+  "category": "CULTUUR",
+  "size": "klein",
+  "components": [
+    {
+      "type": "image",
+      "src": "/images/article_006_0.png",
+      "alt": "Kunstwerk"
+    },
+    {
+      "type": "text",
+      "content": "Een indrukwekkende installatie van lokale kunstenaar Thomas Vermeersch wint erkenning op internationaal podium."
+    },
+    {
+      "type": "text",
+      "content": "De jury prees vooral de innovatieve materialen en de manier waarop bezoekers worden betrokken in het werk."
+    },
+    {
+      "type": "video",
+      "src": "https://www.youtube.com/watch?v=fJ9rUzIMcZQ",
+      "autoplay": false,
+      "mute": false
+    }
+  ],
+  "created_at": "2026-02-19T14:30:00",
+  "updated_at": "2026-03-02T22:37:10.510738",
+  "group": "standaard"
+}

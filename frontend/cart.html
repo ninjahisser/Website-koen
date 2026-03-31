@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Winkelmandje - Het Voorlaatste Nieuws</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <div style="padding: 24px 0 0 0;">
+    <a href="/shop" style="font-size:15px; color:#222; text-decoration:underline; margin-left:16px;">← Terug naar shop</a>
+  </div>
+
+  <main class="container">
+    <section class="cart-wrapper">
+
+
+      <div id="cart-content">
+        <!-- Cart items will be rendered here -->
+      </div>
+
+      <div id="cart-empty" style="display: none;">
+        <p class="empty-message">Je winkelmandje is leeg</p>
+        <a href="/shop" class="btn btn-primary">Terug naar shop</a>
+      </div>
+
+      <div id="cart-summary" style="display: none;">
+        <div class="cart-totals">
+          <div class="total-row">
+            <span>Subtotaal:</span>
+            <span id="subtotal">€0,00</span>
+          </div>
+          <div class="total-row">
+            <span>Verzending:</span>
+            <span id="shipping">Gratis</span>
+          </div>
+          <div class="total-row total">
+            <span>Totaal:</span>
+            <span id="total">€0,00</span>
+          </div>
+        </div>
+
+        <button id="checkout-btn" class="checkout-btn-modern">Naar kassa</button>
+        <a href="/shop" class="add-more-btn-modern">Nog een product toevoegen</a>
+      </div>
+    </section>
+
+
+
+    <div id="checkout-status" class="status-message"></div>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/cart.js"></script>
+  <script>
+    function formatPrice(cents) {
+      return (cents / 100).toLocaleString('nl-BE', { style: 'currency', currency: 'EUR' });
+    }
+
+    function renderCart() {
+      const items = cart.getItems();
+      const container = document.getElementById('cart-content');
+      const empty = document.getElementById('cart-empty');
+      const summary = document.getElementById('cart-summary');
+
+      if (items.length === 0) {
+        container.style.display = 'none';
+        empty.style.display = 'block';
+        summary.style.display = 'none';
+        return;
+      }
+
+      container.style.display = 'block';
+      empty.style.display = 'none';
+      summary.style.display = 'block';
+
+      container.innerHTML = items.map(item => `
+        <div class="cart-item">
+          <div class="cart-item-image">
+            <img src="${item.image}" alt="${item.title}">
+          </div>
+          <div class="cart-item-details">
+            <h3>${item.title}</h3>
+            <p class="cart-item-price">${formatPrice(item.price_cents)} per stuk</p>
+          </div>
+          <div class="cart-item-controls">
+            <label>Hoeveelheid:</label>
+            <input type="number" min="1" value="${item.quantity}" data-product-id="${item.id}" class="quantity-input">
+            <p class="subtotal">${formatPrice(item.price_cents * item.quantity)}</p>
+            <button class="btn-remove" data-product-id="${item.id}">Verwijderen</button>
+          </div>
+        </div>
+      `).join('');
+
+      // Update totals
+      document.getElementById('subtotal').textContent = formatPrice(cart.getTotal());
+      document.getElementById('total').textContent = formatPrice(cart.getTotal());
+
+      // Event listeners
+      container.querySelectorAll('.quantity-input').forEach(input => {
+        input.addEventListener('change', (e) => {
+          const productId = e.target.dataset.productId;
+          const quantity = parseInt(e.target.value) || 1;
+          cart.updateQuantity(productId, quantity);
+          renderCart();
+        });
+      });
+
+      container.querySelectorAll('.btn-remove').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const productId = e.target.dataset.productId;
+          cart.removeItem(productId);
+          renderCart();
+        });
+      });
+
+      updateCartBadge();
+    }
+
+    async function checkout() {
+      const items = cart.getItems();
+      if (items.length === 0) return;
+
+
+      // Geen leveradres meer, alleen items meesturen
+      try {
+        const response = await fetch('/api/stripe/create-checkout-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items })
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+          document.getElementById('checkout-status').innerHTML = 
+            `<div class="error">${data.error}</div>`;
+          return;
+        }
+
+        if (data.checkout_url) {
+          window.location.href = data.checkout_url;
+        }
+      } catch (error) {
+        document.getElementById('checkout-status').innerHTML = 
+          `<div class="error">Fout bij checkout: ${error.message}</div>`;
+      }
+    }
+
+    async function handleCheckoutReturn() {
+      const params = new URLSearchParams(window.location.search);
+      const checkoutState = params.get('checkout');
+      const sessionId = params.get('session_id');
+      const statusEl = document.getElementById('checkout-status');
+
+      if (!checkoutState) {
+        return;
+      }
+
+      if (checkoutState === 'cancelled') {
+        statusEl.className = 'status-message error';
+        statusEl.textContent = 'Betaling geannuleerd. Je kan opnieuw proberen.';
+        return;
+      }
+
+      if (checkoutState === 'success' && sessionId) {
+        try {
+          const response = await fetch('/api/stripe/confirm-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId })
+          });
+          const payload = await response.json();
+          if (!response.ok) {
+            throw new Error(payload.error || 'Kon bestelling niet bevestigen.');
+          }
+
+          cart.clear();
+          renderCart();
+          window.location.href = '/shop?checkout=success';
+        } catch (error) {
+          statusEl.className = 'status-message error';
+          statusEl.textContent = `Betaling gelukt, maar order-opslag mislukte: ${error.message}`;
+        }
+      }
+    }
+
+    document.getElementById('checkout-btn')?.addEventListener('click', checkout);
+    
+    window.addEventListener('cartUpdated', renderCart);
+    document.addEventListener('DOMContentLoaded', async () => {
+      renderCart();
+      await handleCheckoutReturn();
+    });
+  </script>
+</body>
+</html>

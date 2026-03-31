@@ -1,0 +1,112 @@
+{
+  "id": "cs_test_b1oFQWljf7mo69s1irNTTDzpmQiqpU4V7pi12MWQLqICrdTahSABRzJ0ia",
+  "stripe_session_id": "cs_test_b1oFQWljf7mo69s1irNTTDzpmQiqpU4V7pi12MWQLqICrdTahSABRzJ0ia",
+  "customer_email": "onbekend@email.com",
+  "items": [
+    {
+      "product_id": "product_002",
+      "product_title": "Workshop Toolkit",
+      "price_cents": 4900,
+      "quantity": 1,
+      "subtotal_cents": 4900
+    }
+  ],
+  "total_cents": 4900,
+  "status": "pending",
+  "created_at": "2026-03-25T17:20:58.112774",
+  "metadata": {
+    "payment_status": "paid",
+    "payment_intent": {
+      "id": "pi_3TEuAo3U6pxUT3EF0LlzmK39",
+      "object": "payment_intent",
+      "amount": 4900,
+      "amount_capturable": 0,
+      "amount_details": {
+        "shipping": {
+          "amount": 0,
+          "from_postal_code": null,
+          "to_postal_code": null
+        },
+        "tax": {
+          "total_tax_amount": 0
+        },
+        "tip": {}
+      },
+      "amount_received": 4900,
+      "application": null,
+      "application_fee_amount": null,
+      "automatic_payment_methods": null,
+      "canceled_at": null,
+      "cancellation_reason": null,
+      "capture_method": "automatic_async",
+      "client_secret": "pi_3TEuAo3U6pxUT3EF0LlzmK39_secret_RWqYKsm2iwgXDVYzDA3XEEfQa",
+      "confirmation_method": "automatic",
+      "created": 1774455650,
+      "currency": "eur",
+      "customer": null,
+      "customer_account": null,
+      "description": null,
+      "excluded_payment_method_types": null,
+      "last_payment_error": null,
+      "latest_charge": "py_3TEuAo3U6pxUT3EF0BywHXeY",
+      "livemode": false,
+      "metadata": {},
+      "next_action": null,
+      "on_behalf_of": null,
+      "payment_details": {
+        "customer_reference": null,
+        "order_reference": "cs_test_b1oFQWljf7mo69s1irNTTDzpmQiqpU4V7pi12MWQLqICrdTahSABRzJ0ia"
+      },
+      "payment_method": "pm_1TEuAo3U6pxUT3EFF97Svwk1",
+      "payment_method_configuration_details": null,
+      "payment_method_options": {
+        "bancontact": {
+          "preferred_language": "en"
+        }
+      },
+      "payment_method_types": [
+        "bancontact"
+      ],
+      "processing": null,
+      "receipt_email": null,
+      "review": null,
+      "setup_future_usage": null,
+      "shipping": {
+        "address": {
+          "city": "Wervik",
+          "country": "BE",
+          "line1": "Oude Ieperstraat 30",
+          "line2": null,
+          "postal_code": "8940",
+          "state": null
+        },
+        "carrier": null,
+        "name": "heilige pastoor",
+        "phone": null,
+        "tracking_number": null
+      },
+      "source": null,
+      "statement_descriptor": null,
+      "statement_descriptor_suffix": null,
+      "status": "succeeded",
+      "transfer_data": null,
+      "transfer_group": null
+    },
+    "currency": "eur",
+    "amount_total": 4900,
+    "amount_subtotal": 4900,
+    "customer_name": "heilige pastoor"
+  },
+  "shipping_address": {
+    "name": "heilige pastoor",
+    "address": {
+      "city": "Wervik",
+      "country": "BE",
+      "line1": "Oude Ieperstraat 30",
+      "line2": null,
+      "postal_code": "8940",
+      "state": null
+    },
+    "phone": null
+  }
+}

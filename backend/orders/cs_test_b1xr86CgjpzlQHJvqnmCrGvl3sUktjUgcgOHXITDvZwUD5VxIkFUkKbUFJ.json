@@ -1,0 +1,126 @@
+{
+  "id": "cs_test_b1xr86CgjpzlQHJvqnmCrGvl3sUktjUgcgOHXITDvZwUD5VxIkFUkKbUFJ",
+  "stripe_session_id": "cs_test_b1xr86CgjpzlQHJvqnmCrGvl3sUktjUgcgOHXITDvZwUD5VxIkFUkKbUFJ",
+  "customer_email": "seth.vdb@hotmail.com",
+  "items": [
+    {
+      "product_id": "product_001",
+      "product_title": "Editorial Poster Pack Test",
+      "price_cents": 2900,
+      "quantity": 1,
+      "subtotal_cents": 2900
+    },
+    {
+      "product_id": "7b441d61",
+      "product_title": "Fortnite",
+      "price_cents": 10000,
+      "quantity": 1,
+      "subtotal_cents": 10000
+    },
+    {
+      "product_id": "product_002",
+      "product_title": "Workshop Toolkit",
+      "price_cents": 4900,
+      "quantity": 1,
+      "subtotal_cents": 4900
+    }
+  ],
+  "total_cents": 17800,
+  "status": "pending",
+  "created_at": "2026-03-24T10:56:33.644816",
+  "metadata": {
+    "payment_status": "paid",
+    "payment_intent": {
+      "id": "pi_3TERhE3U6pxUT3EF0iKAt3sJ",
+      "object": "payment_intent",
+      "amount": 17800,
+      "amount_capturable": 0,
+      "amount_details": {
+        "shipping": {
+          "amount": 0,
+          "from_postal_code": null,
+          "to_postal_code": null
+        },
+        "tax": {
+          "total_tax_amount": 0
+        },
+        "tip": {}
+      },
+      "amount_received": 17800,
+      "application": null,
+      "application_fee_amount": null,
+      "automatic_payment_methods": null,
+      "canceled_at": null,
+      "cancellation_reason": null,
+      "capture_method": "automatic_async",
+      "client_secret": "pi_3TERhE3U6pxUT3EF0iKAt3sJ_secret_2y9uSgZnzmqwHBA2DZ6n7XhQr",
+      "confirmation_method": "automatic",
+      "created": 1774346184,
+      "currency": "eur",
+      "customer": null,
+      "customer_account": null,
+      "description": null,
+      "excluded_payment_method_types": null,
+      "last_payment_error": null,
+      "latest_charge": "py_3TERhE3U6pxUT3EF0joAVpH5",
+      "livemode": false,
+      "metadata": {},
+      "next_action": null,
+      "on_behalf_of": null,
+      "payment_details": {
+        "customer_reference": null,
+        "order_reference": "cs_test_b1xr86CgjpzlQHJvqnmCrGvl3sUktjUgcgOHXITDvZwUD5VxIkFUkKbUFJ"
+      },
+      "payment_method": "pm_1TERhD3U6pxUT3EFsJbIiATF",
+      "payment_method_configuration_details": null,
+      "payment_method_options": {
+        "bancontact": {
+          "preferred_language": "en"
+        }
+      },
+      "payment_method_types": [
+        "bancontact"
+      ],
+      "processing": null,
+      "receipt_email": null,
+      "review": null,
+      "setup_future_usage": null,
+      "shipping": {
+        "address": {
+          "city": "Gent",
+          "country": "BE",
+          "line1": "Ter Hand",
+          "line2": "Ter hand 4",
+          "postal_code": "9041",
+          "state": null
+        },
+        "carrier": null,
+        "name": "seth van den bossceh",
+        "phone": null,
+        "tracking_number": null
+      },
+      "source": null,
+      "statement_descriptor": null,
+      "statement_descriptor_suffix": null,
+      "status": "succeeded",
+      "transfer_data": null,
+      "transfer_group": null
+    },
+    "currency": "eur",
+    "amount_total": 17800,
+    "amount_subtotal": 17800,
+    "customer_name": "seth van den bossceh"
+  },
+  "shipping_address": {
+    "name": "seth van den bossceh",
+    "address": {
+      "city": "Gent",
+      "country": "BE",
+      "line1": "Ter Hand",
+      "line2": "Ter hand 4",
+      "postal_code": "9041",
+      "state": null
+    },
+    "phone": null
+  }
+}

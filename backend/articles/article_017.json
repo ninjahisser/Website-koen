@@ -1,0 +1,24 @@
+{
+  "id": "article_017",
+  "title": "Wat vinden de Verenigde Verenigingen? Is zo een middenveld wel nodig?",
+  "category": "POLITIEK",
+  "size": "groot",
+  "components": [
+    {
+      "type": "image",
+      "src": "/images/article_017_0.png",
+      "alt": "School in vergaderruimte"
+    },
+    {
+      "type": "text",
+      "content": "DIT IS EEN TEST"
+    },
+    {
+      "type": "text",
+      "content": "De stemming gaat over budgetten voor schoolgebouwen en het uitbreiden van sportinfrastructuur."
+    }
+  ],
+  "created_at": "2026-02-21T11:00:00",
+  "updated_at": "2026-03-02T22:31:01.206786",
+  "group": "standaard"
+}
