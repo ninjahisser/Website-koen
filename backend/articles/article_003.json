@@ -1,14 +1,14 @@
 {
   "id": "article_003",
-  "title": "Auto gaat vroem vroem!",
+  "title": "Einduitslag meest corrupte WK ooit bekend",
   "category": "RECREATIE",
   "size": "klein",
   "components": [
     {
       "type": "video",
-      "src": "https://www.youtube.com/watch?v=YQHsXMglC9A",
-      "autoplay": false,
-      "mute": true
+      "src": "https://www.youtube.com/watch?v=QMBRGh4TuV4",
+      "autoplay": true,
+      "mute": false
     },
     {
       "type": "image",
@@ -17,14 +17,10 @@
     },
     {
       "type": "text",
-      "content": "Met de zomervakantie in zicht, is het tijd om inspiratie op te doen voor je volgende avontuur. Dit artikel presenteert de top vakantiebestemmingen in het Belgische binnenland."
-    },
-    {
-      "type": "text",
-      "content": "Van rustige natuurpaden tot stedentrips met cultuur: er is dit jaar opvallend veel keuze dichtbij huis."
+      "content": "De voetballertjes en de voetbalbonden zijn bang voor … een gele kaart en zwichten voor de zoveelste keer voor de FIFA. Dit moet zowat het meest beschamende WK ooit zijn, we kunnen de wansmakelijkheid amper nog aanzien en stoppen tot nader order met de verslaggeving, en geven de titel graag aan de fantastische reporters van Studio Malem ."
     }
   ],
   "created_at": "2026-02-15T09:15:00",
-  "updated_at": "2026-03-02T22:39:36.951073",
+  "updated_at": "2026-03-31T12:12:19.230893",
   "group": "standaard"
 }

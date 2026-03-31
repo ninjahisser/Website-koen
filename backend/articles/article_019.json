@@ -1,17 +1,17 @@
 {
   "id": "article_019",
-  "title": "Belgium for beginners: Ministerie van maskers!",
+  "title": "Paul de Octopus is terug en voorspelt winst Marokko",
   "category": "STANDAARD",
   "group": "het klein nieuws",
   "size": "tekst",
   "components": [
     {
       "type": "text",
-      "content": "Een korte, krachtige headline die als volwaardig artikel in de layout verschijnt."
+      "content": "Paul de Octopus is terug en voorspelt winnaar Afrika Cup"
     },
     {
       "type": "video",
-      "src": "https://www.youtube.com/watch?v=wX8FyHd4tUk",
+      "src": "https://youtu.be/2W5fdY0pN_o?si=I5ytqeJ5snYSL9H_",
       "autoplay": true,
       "mute": true
     },
@@ -22,5 +22,5 @@
     }
   ],
   "created_at": "2026-02-23T10:05:00",
-  "updated_at": "2026-03-02T23:31:57.843955"
+  "updated_at": "2026-03-31T11:11:25.636702"
 }

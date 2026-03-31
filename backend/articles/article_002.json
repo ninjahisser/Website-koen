@@ -1,13 +1,13 @@
 {
   "id": "article_002",
-  "title": "Steen ontgraven?",
+  "title": "Kleinste cinema van het land in aanbouw",
   "category": "SOCIAAL",
   "size": "klein",
   "components": [
     {
       "type": "video",
-      "src": "https://www.youtube.com/watch?v=OPf0YbXqDm0",
-      "autoplay": false,
+      "src": "https://www.youtube.com/watch?v=8ZSYsas80SM",
+      "autoplay": true,
       "mute": false
     },
     {
@@ -17,14 +17,10 @@
     },
     {
       "type": "text",
-      "content": "Het Halfvastenfoor is een van de populairste evenementen in BelgiÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«. Met meer dan 30 attracties en een rijke geschiedenis, biedt dit evenement plezier voor het hele gezin."
-    },
-    {
-      "type": "text",
-      "content": "Nieuwe foodtrucks en een avondprogramma met live muziek zorgen dit jaar voor extra bezoekers."
+      "content": "We zijn volop bezig onze eigen cinema te maken, hier de eerste beelden met een van onze absolute steractrices van de voorbije jaren"
     }
   ],
   "created_at": "2026-02-18T14:30:00",
-  "updated_at": "2026-03-02T22:37:33.883611",
+  "updated_at": "2026-03-31T12:01:05.202390",
   "group": "het klein nieuws"
 }

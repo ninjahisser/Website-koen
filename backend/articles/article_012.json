@@ -1,9 +1,15 @@
 {
   "id": "article_012",
-  "title": "Van Eyck protest!",
-  "category": "GENT",
+  "title": "Studio Malem richt sportredactie op",
+  "category": "MALEM SPORT",
   "size": "klein",
   "components": [
+    {
+      "type": "video",
+      "src": "https://www.youtube.com/watch?v=UWoPtYDZFhs",
+      "autoplay": true,
+      "mute": false
+    },
     {
       "type": "image",
       "src": "/images/article_012_0.png",
@@ -11,14 +17,10 @@
     },
     {
       "type": "text",
-      "content": "15 kilometer nieuw fietspad verbindt centrum Gent met dorpen langs de Leie."
-    },
-    {
-      "type": "text",
-      "content": "De route is ontworpen met veilige kruispunten en extra rustplaatsen onderweg."
+      "content": "Het moest er van komen, ook studio Malem leeft nu een sportredactie. Maar troost u, Malik stelt goede vragen !"
     }
   ],
   "created_at": "2026-02-13T15:00:00",
-  "updated_at": "2026-03-02T22:40:15.562385",
+  "updated_at": "2026-03-31T12:20:47.433527",
   "group": "standaard"
 }

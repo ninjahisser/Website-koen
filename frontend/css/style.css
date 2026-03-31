@@ -163,7 +163,7 @@
     /* Colors */
     --dark: #000000;
     /* HVLN --third: #0033FF; */
-    /* STUDIO MALEM */ --third: #006aad;
+    /* STUDIO MALEM */ --third: #295B4C;
     --thirdlight: #91B6FF;
     --main: #FFFFFF;
     --background: #F5F5F5;
@@ -816,6 +816,15 @@ body {
     justify-content: center;
 }
 
+.logo_malem{
+    width: 100%;
+}
+
+ .logo_malem img{
+    height: 60px !important;
+    margin-left: calc(50vw - 120px) !important;
+}
+
 .logo {
     background-color: var(--third);
     color: var(--main) !important;
@@ -989,7 +998,8 @@ body {
 }
 
 .btn-blue:hover {
-    background-color: #0028cc;
+    /* HVLN - background-color: #0028cc;*/
+    background-color: #007e28;
 }
 
 .btn-blue-full {
@@ -1206,17 +1216,28 @@ body {
 }
 
 /* Article Card Styling */
+/* Klein Nieuws Article Card Customization */
 .article-card {
     position: relative;
     overflow: hidden;
     background-color: var(--main);
+    color: #fff !important;
     cursor: pointer;
     transition: outline-color 0.25s ease, background-color 0.25s ease;
     border-radius: 0 !important;
     box-shadow: none !important;
-    height: 200px;
+    height: 260px; /* Changed height for different look */
     width: 100%;
-    border: 1px solid #e6e6e6;
+    border: 2px solid #e6e6e6;
+}
+
+/* Ensure text inside klein nieuws articles is white */
+.klein-nieuws-section .article-card,
+.klein-nieuws-section .article-card *,
+.klein-nieuws-section .article-card-text,
+.klein-nieuws-section .article-card-text * {
+    color: #fff !important;
+}
 }
 
 .side-column .klein-nieuws-section .article-card,
@@ -1267,7 +1288,7 @@ body {
 }
 
 .article-card.large-item {
-    height: 560px;
+    height: calc(9/16 * 110%);
     width: 100%;
     max-width: none;
 }
@@ -1324,7 +1345,6 @@ body {
 }
 
 .article-card.small-item .article-image {
-    height: 180px;
     width: 100%;
     object-fit: cover;
     background-color: var(--main);
@@ -1372,7 +1392,11 @@ body {
 }
 
 .article-card-text:hover {
+    /* HVLN -
     background-color: #0028cc;
+    */
+    background-color: #007e28;
+    border: 1px solid #ffffff;
 }
 
 .article-card-text:hover .article-text-title {

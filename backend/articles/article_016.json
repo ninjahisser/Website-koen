@@ -1,10 +1,16 @@
 {
   "id": "article_016",
-  "title": "De NUMMER 1 vakantietips in het binnenland!",
+  "title": "Gentse kopstukken over genocide Gaza",
   "category": "POLITIEK",
-  "group": "de miniatuurwereld",
+  "group": "standaard",
   "size": "groot",
   "components": [
+    {
+      "type": "video",
+      "src": "https://www.youtube.com/watch?v=tbG53FG89VE",
+      "autoplay": true,
+      "mute": false
+    },
     {
       "type": "image",
       "src": "/images/article_016_0.png",
@@ -12,19 +18,9 @@
     },
     {
       "type": "text",
-      "content": "De minister van Economie heeft vandaag een reeks infrastructuurprojecten aangekondigd die gericht zijn op het verbeteren van de wegen en openbaar vervoer. Deze plannen zijn onderdeel van een breder stimuleringspakket."
-    },
-    {
-      "type": "text",
-      "content": "De eerste werken starten al in het voorjaar en zullen gefaseerd worden uitgevoerd."
-    },
-    {
-      "type": "video",
-      "src": "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
-      "autoplay": true,
-      "mute": true
+      "content": "De jongeren van Malem interviewden alle Gentse kopstukken over de genocide in Gaza, hier een compilatie van de antwoorden"
     }
   ],
   "created_at": "2026-02-21T10:30:00",
-  "updated_at": "2026-03-02T23:27:34.060757"
+  "updated_at": "2026-03-31T11:49:44.197048"
 }

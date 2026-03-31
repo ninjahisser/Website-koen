@@ -1,30 +1,26 @@
 {
   "id": "article_007",
-  "title": "Vanalles wow code",
-  "category": "ECOLOGISCH",
+  "title": "Voetballerkenner Christa over WK",
+  "category": "MALEM SPORT",
   "size": "klein",
   "components": [
+    {
+      "type": "video",
+      "src": "https://www.youtube.com/watch?v=gE_OXcUXA3o",
+      "autoplay": true,
+      "mute": false
+    },
+    {
+      "type": "text",
+      "content": "We hebben in onze winkel voetbalkenners die perfect de matchen kunnen voorspellen"
+    },
     {
       "type": "image",
       "src": "/images/article_007_0.png",
       "alt": "Circulair verpakking"
-    },
-    {
-      "type": "text",
-      "content": "Vanaf 2027 moeten alle verpakkingen in Gent 100% recyclebaar zijn. Een ambitieus doel voor duurzaamheid."
-    },
-    {
-      "type": "text",
-      "content": "Lokale handelaars krijgen een overgangsperiode met subsidies om het nieuwe beleid haalbaar te maken."
-    },
-    {
-      "type": "video",
-      "src": "https://www.youtube.com/watch?v=k85mRPqvMbE",
-      "autoplay": false,
-      "mute": false
     }
   ],
   "created_at": "2026-02-18T09:15:00",
-  "updated_at": "2026-03-02T22:38:07.866242",
+  "updated_at": "2026-03-31T12:04:23.618601",
   "group": "standaard"
 }

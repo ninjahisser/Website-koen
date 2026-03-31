@@ -1,0 +1,26 @@
+{
+  "id": "1cfb81dc",
+  "title": "Uitverkoop in Shoppingcenter Malem",
+  "category": "",
+  "size": "klein",
+  "components": [
+    {
+      "type": "video",
+      "src": "https://www.youtube.com/watch?v=44nuHrrIAsM",
+      "autoplay": true,
+      "mute": false
+    },
+    {
+      "type": "image",
+      "src": "/images/temp_1774950706151_0.png",
+      "alt": ""
+    },
+    {
+      "type": "text",
+      "content": "Shoppingcenter Malem stopt eind 2024 en doet grote uitverkoop met spectaculaire kortingen."
+    }
+  ],
+  "created_at": "2026-03-31T11:51:48.836790",
+  "updated_at": "2026-03-31T11:51:48.836790",
+  "group": "standaard"
+}

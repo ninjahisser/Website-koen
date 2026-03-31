@@ -1,9 +1,15 @@
 {
   "id": "article_011",
-  "title": "Boos in de office!",
+  "title": "Weekend special over merchandising",
   "category": "GENT",
   "size": "groot",
   "components": [
+    {
+      "type": "video",
+      "src": "https://www.youtube.com/watch?v=fHriej_K_xI",
+      "autoplay": true,
+      "mute": false
+    },
     {
       "type": "image",
       "src": "/images/article_011_0.png",
@@ -11,14 +17,10 @@
     },
     {
       "type": "text",
-      "content": "Een recordaantal kandidaten dient zich aan voor de prestigieuze rol van Burgemeester van Gent."
-    },
-    {
-      "type": "text",
-      "content": "De selectieprocedure wordt dit jaar strenger, met extra debatten en publieke bevragingen."
+      "content": "De reporters van Studio Malem sport hebben het vandaag over merchandising, een absolute specialiteit van VRT anker Karl Vannieuwenkerke"
     }
   ],
   "created_at": "2026-02-14T10:30:00",
-  "updated_at": "2026-03-02T22:39:56.123694",
+  "updated_at": "2026-03-31T12:14:05.867555",
   "group": "de miniatuurwereld"
 }

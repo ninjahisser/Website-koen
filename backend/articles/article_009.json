@@ -1,9 +1,15 @@
 {
   "id": "article_009",
-  "title": "Huisjes aan het water!",
+  "title": "België – Marokko. Verslag neutrale verslaggever",
   "category": "SOCIAAL",
   "size": "klein",
   "components": [
+    {
+      "type": "video",
+      "src": "https://www.youtube.com/watch?v=y5hmemwdz48",
+      "autoplay": true,
+      "mute": false
+    },
     {
       "type": "image",
       "src": "/images/article_009_0.png",
@@ -11,14 +17,10 @@
     },
     {
       "type": "text",
-      "content": "Duizenden scholieren nemen deel aan de grootste klimaatmars ooit in Vlaanderen."
-    },
-    {
-      "type": "text",
-      "content": "De organisatie roept beleidsmakers op om concrete doelen vast te leggen voor 2030."
+      "content": "Noor voorspelt perfect de uitslg van de wedstrijd België – Marokko"
     }
   ],
   "created_at": "2026-02-16T11:20:00",
-  "updated_at": "2026-03-02T22:38:49.620352",
+  "updated_at": "2026-03-31T12:08:54.144318",
   "group": "standaard"
 }

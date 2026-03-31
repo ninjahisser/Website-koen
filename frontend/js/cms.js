@@ -154,10 +154,10 @@ async function loadHomepageSettings() {
         document.getElementById('newsletterTextInput').value = data.newsletterText || '';
         document.getElementById('newsletterButtonTextInput').value = data.newsletterButtonText || '';
         document.getElementById('newsletterButtonLinkInput').value = data.newsletterButtonLink || '';
-        document.getElementById('workshopTitleInput').value = data.workshopTitle || '';
-        document.getElementById('workshopTextInput').value = data.workshopText || '';
-        document.getElementById('workshopButtonTextInput').value = data.workshopButtonText || '';
-        document.getElementById('workshopButtonLinkInput').value = data.workshopButtonLink || '';
+        //HVLN // document.getElementById('workshopTitleInput').value = data.workshopTitle || '';
+        //HVLN // document.getElementById('workshopTextInput').value = data.workshopText || '';
+        //HVLN // document.getElementById('workshopButtonTextInput').value = data.workshopButtonText || '';
+        //HVLN // document.getElementById('workshopButtonLinkInput').value = data.workshopButtonLink || '';
         if (statusEl) {
             statusEl.textContent = '';
         }
@@ -178,10 +178,10 @@ async function saveHomepageSettings() {
         newsletterText: document.getElementById('newsletterTextInput').value.trim(),
         newsletterButtonText: document.getElementById('newsletterButtonTextInput').value.trim(),
         newsletterButtonLink: document.getElementById('newsletterButtonLinkInput').value.trim(),
-        workshopTitle: document.getElementById('workshopTitleInput').value.trim(),
-        workshopText: document.getElementById('workshopTextInput').value.trim(),
-        workshopButtonText: document.getElementById('workshopButtonTextInput').value.trim(),
-        workshopButtonLink: document.getElementById('workshopButtonLinkInput').value.trim()
+        //HLVN // workshopTitle: document.getElementById('workshopTitleInput').value.trim(),
+        //HVLN // workshopText: document.getElementById('workshopTextInput').value.trim(),
+        //HVLN // workshopButtonText: document.getElementById('workshopButtonTextInput').value.trim(),
+        //HVLN // workshopButtonLink: document.getElementById('workshopButtonLinkInput').value.trim()
     };
     try {
         const res = await fetch(`${API_BASE_URL}/site`, {

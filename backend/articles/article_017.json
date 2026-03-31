@@ -1,9 +1,15 @@
 {
   "id": "article_017",
-  "title": "Wat vinden de Verenigde Verenigingen? Is zo een middenveld wel nodig?",
+  "title": "Fearless in Malem : eerste hoofrolspeler bekend !",
   "category": "POLITIEK",
   "size": "groot",
   "components": [
+    {
+      "type": "video",
+      "src": "https://www.youtube.com/watch?v=sTLP4Bpi0R8",
+      "autoplay": true,
+      "mute": false
+    },
     {
       "type": "image",
       "src": "/images/article_017_0.png",
@@ -11,14 +17,10 @@
     },
     {
       "type": "text",
-      "content": "DIT IS EEN TEST"
-    },
-    {
-      "type": "text",
-      "content": "De stemming gaat over budgetten voor schoolgebouwen en het uitbreiden van sportinfrastructuur."
+      "content": "Studio plant een niuewe en achtste verse van the fast and the furious, en we kunnen Umet gepaste trots de eerste hoofdrolspeelster aankondingen !"
     }
   ],
   "created_at": "2026-02-21T11:00:00",
-  "updated_at": "2026-03-02T22:31:01.206786",
+  "updated_at": "2026-03-31T11:17:56.894075",
   "group": "standaard"
 }

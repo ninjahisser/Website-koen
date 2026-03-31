@@ -1,10 +1,16 @@
 {
   "id": "article_015",
-  "title": "BIG BROTHER IS WATCHING YOU",
+  "title": "Oude en nieuwe beloftes jeugdhuis Malem",
   "category": "POLITIEK",
   "group": "de miniatuurwereld",
   "size": "klein",
   "components": [
+    {
+      "type": "video",
+      "src": "https://www.youtube.com/watch?v=MChHhRH1tRw",
+      "autoplay": true,
+      "mute": false
+    },
     {
       "type": "image",
       "src": "/images/article_015_0.png",
@@ -12,19 +18,9 @@
     },
     {
       "type": "text",
-      "content": "Het parlement debatteert vandaag over een voorgesteld wetsvoorstel dat de kieswet in BelgiÃƒÆ’Ã‚Â« zou veranderen. Kritiek van verschillende partijen wordt verwacht."
-    },
-    {
-      "type": "text",
-      "content": "Volgens experts kan het voorstel de opkomst bij lokale verkiezingen verhogen."
-    },
-    {
-      "type": "video",
-      "src": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      "autoplay": false,
-      "mute": false
+      "content": "De jongeren van Malem wachten al meer dan tien jaar op een jeugdhuis. In het kader van EYC, kregen ze de kans op alle Gentse politieke kopstukken hierover te intervieuwen, met als gevolg oude en nieuwe beloftes"
     }
   ],
   "created_at": "2026-02-21T09:00:00",
-  "updated_at": "2026-03-02T22:36:18.061055"
+  "updated_at": "2026-03-31T11:54:38.474024"
 }

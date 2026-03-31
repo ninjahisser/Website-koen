@@ -1,17 +1,23 @@
 {
   "id": "article_018",
-  "title": "GRATIS ATTRACTIES?! Gestrande reizigers?!  De sinksenfoor?! Alles dat je moet weten, op het klein nieuws!",
+  "title": "Ook Veerle Baetens krijgt hoofdrol in 'fearless in malem'",
   "category": "STANDAARD",
   "group": "standaard",
   "size": "klein",
   "components": [
     {
-      "type": "text",
-      "content": "GRATIS ATTRACTIES?!\nGestrande reizigers?! \nDe sinksenfoor?!\nAlles dat je moet weten, op het klein nieuws!"
+      "type": "video",
+      "src": "https://www.youtube.com/watch?v=_aEaBvS8rHc",
+      "autoplay": true,
+      "mute": false
     },
     {
       "type": "text",
-      "content": "tekst deel 2"
+      "content": "Veeerle Baetens stelt zich kandidaat voor actiescenes voor Fearless in Malem. Ze speelt liever niet tevel samen met Johhny Depp, en we regelen dat meteen."
+    },
+    {
+      "type": "text",
+      "content": "In een beweging brengen we2pac tot leven en de opnames gaan snel kunnen beginnen, op einde meteen een eerste voorproefje"
     },
     {
       "type": "image",
@@ -20,5 +26,5 @@
     }
   ],
   "created_at": "2026-02-23T10:00:00",
-  "updated_at": "2026-03-02T22:29:45.612698"
+  "updated_at": "2026-03-31T11:15:35.671389"
 }
