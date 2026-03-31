@@ -133,7 +133,7 @@ class ArticleLoader {
             }
 
             // Stop when no full row can be built anymore.
-            break;
+
         }
 
         this.pendingStandaardArticles = [...largeQueue, ...smallQueue];
