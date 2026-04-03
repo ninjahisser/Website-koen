@@ -362,7 +362,7 @@ if (refreshOrdersBtn) {
 
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Tab functionaliteit voor 4 tabs
+    // Tab functionaliteit voor alle tabs inclusief settings
     const tabBtns = document.querySelectorAll('.cms-tab-btn');
     const tabContents = {
         'cms-tab-orders': document.getElementById('cms-tab-orders'),
@@ -383,10 +383,132 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     });
-    // Standaard: Shop tab actief
+    // Standaard: Orders tab actief
     Object.keys(tabContents).forEach(key => {
         tabContents[key].style.display = (key === 'cms-tab-orders') ? '' : 'none';
     });
+
+    // Password toggle buttons
+    const toggleBtns = document.querySelectorAll('.cms-toggle-pw-btn');
+    toggleBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetId = btn.getAttribute('data-target');
+            const input = document.getElementById(targetId);
+            if (input) {
+                input.type = input.type === 'password' ? 'text' : 'password';
+                btn.textContent = input.type === 'password' ? '👁' : '👁‍🗨️';
+            }
+        });
+    });
+
+    // Settings handlers
+    const loadSettingsBtn = document.getElementById('load-settings-btn');
+    const saveSettingsBtn = document.getElementById('save-settings-btn');
+    const cmsPasswordInput = document.getElementById('cmsPasswordInput');
+    const stripeSecretInput = document.getElementById('stripeSecretKeyInput');
+    const stripePublishableInput = document.getElementById('stripePublishableKeyInput');
+    const settingsStatus = document.getElementById('settingsStatus');
+
+    if (loadSettingsBtn) {
+        loadSettingsBtn.addEventListener('click', async () => {
+            settingsStatus.textContent = 'Laden...';
+            settingsStatus.className = 'cms-status';
+            try {
+                const response = await fetch('/api/cms/stripe-config');
+                const data = await response.json();
+                if (response.ok) {
+                    stripeSecretInput.value = data.secret_key_full;
+                    stripePublishableInput.value = data.publishable_key_full;
+                    settingsStatus.textContent = data.configured ? 'Stripe is geconfigureerd' : 'Geen Stripe keys ingesteld';
+                    settingsStatus.className = data.configured ? 'cms-status cms-status-success' : 'cms-status';
+                } else {
+                    settingsStatus.textContent = 'Fout bij laden van instellingen';
+                    settingsStatus.className = 'cms-status cms-status-error';
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+                settingsStatus.textContent = 'Fout bij laden van instellingen';
+                settingsStatus.className = 'cms-status cms-status-error';
+            }
+        });
+    }
+
+    if (saveSettingsBtn) {
+        saveSettingsBtn.addEventListener('click', async () => {
+            const newCmsPassword = cmsPasswordInput.value.trim();
+            const secretKey = stripeSecretInput.value.trim();
+            const publishableKey = stripePublishableInput.value.trim();
+
+            settingsStatus.textContent = 'Opslaan...';
+            settingsStatus.className = 'cms-status';
+            saveSettingsBtn.disabled = true;
+
+            let errorOccurred = false;
+
+            // Save Stripe config
+            try {
+                const response = await fetch('/api/cms/stripe-config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        secret_key: secretKey,
+                        publishable_key: publishableKey
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    settingsStatus.textContent = data.error || 'Fout bij opslaan Stripe keys';
+                    settingsStatus.className = 'cms-status cms-status-error';
+                    errorOccurred = true;
+                }
+            } catch (error) {
+                console.error('Error saving Stripe config:', error);
+                settingsStatus.textContent = 'Fout bij opslaan van Stripe keys';
+                settingsStatus.className = 'cms-status cms-status-error';
+                errorOccurred = true;
+            }
+
+            // Save CMS password if changed
+            if (newCmsPassword && !errorOccurred) {
+                try {
+                    const response = await fetch('/api/cms/password', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            password: newCmsPassword
+                        })
+                    });
+
+                    const data = await response.json();
+                    if (response.ok) {
+                        settingsStatus.textContent = 'Instellingen opgeslagen. U wordt uitgelogd...';
+                        settingsStatus.className = 'cms-status cms-status-success';
+                        setTimeout(() => {
+                            window.location.href = '/cms-login';
+                        }, 2000);
+                    } else {
+                        settingsStatus.textContent = data.error || 'Fout bij wijzigen wachtwoord';
+                        settingsStatus.className = 'cms-status cms-status-error';
+                    }
+                } catch (error) {
+                    console.error('Error changing password:', error);
+                    settingsStatus.textContent = 'Fout bij wijzigen van wachtwoord';
+                    settingsStatus.className = 'cms-status cms-status-error';
+                }
+            } else if (!errorOccurred) {
+                settingsStatus.textContent = 'Instellingen opgeslagen';
+                settingsStatus.className = 'cms-status cms-status-success';
+            }
+
+            saveSettingsBtn.disabled = false;
+        });
+    }
 
     // Laad data
     loadStats();

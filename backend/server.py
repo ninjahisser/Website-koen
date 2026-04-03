@@ -17,11 +17,30 @@ except ImportError:
     stripe = None
 
 
+def create_default_env_file(env_path):
+    """Create a default .env file if it doesn't exist."""
+    default_content = """# CMS Configuration
+CMS_PASSWORD=admin123
+
+# Secret key for sessions (change this in production!)
+SECRET_KEY=your-super-secret-key-change-this-in-production
+
+# Stripe Configuration (optional)
+STRIPE_SECRET_KEY=
+STRIPE_PUBLISHABLE_KEY=
+APP_BASE_URL=http://localhost:5000
+"""
+    with open(env_path, 'w', encoding='utf-8') as f:
+        f.write(default_content)
+    print(f"DEBUG: Nieuwe .env file aangemaakt op {env_path}")
+
+
 def load_env_file(env_path):
     print(f"DEBUG: Probeer .env te laden van: {env_path}")
     if not os.path.exists(env_path):
         print(f"DEBUG: .env niet gevonden op {env_path}")
-        return
+        create_default_env_file(env_path)
+    
     with open(env_path, 'r', encoding='utf-8') as env_file:
         for raw_line in env_file:
             line = raw_line.strip()
@@ -625,21 +644,22 @@ def cms_login():
     """Login endpoint for CMS."""
     data = parse_json_body()
     password = data.get('password', '').strip()
+    current_cms_password = os.getenv('CMS_PASSWORD', CMS_PASSWORD).strip()
     
     print(f'DEBUG: Login attempt with password length: {len(password)}')
-    print(f'DEBUG: Expected CMS_PASSWORD: {repr(CMS_PASSWORD)}')
+    print(f'DEBUG: Expected CMS_PASSWORD: {repr(current_cms_password)}')
     print(f'DEBUG: Received password: {repr(password)}')
     
     if not password:
         return jsonify({'success': False, 'error': 'Wachtwoord is verplicht'}), 400
     
-    if password == CMS_PASSWORD:
+    if password == current_cms_password:
         print(f'DEBUG: Wachtwoord correct! Session aangemaakt.')
         session.permanent = True
         session['cms_authenticated'] = True
         return jsonify({'success': True, 'message': 'Ingelogd'})
     else:
-        print(f'DEBUG: Wachtwoord onjuist! {repr(password)} != {repr(CMS_PASSWORD)}')
+        print(f'DEBUG: Wachtwoord onjuist! {repr(password)} != {repr(current_cms_password)}')
         return jsonify({'success': False, 'error': 'Onjuist wachtwoord'}), 401
 
 
@@ -657,7 +677,131 @@ def cms_status():
     return jsonify({'authenticated': is_authenticated})
 
 
-# ===== PROTECTED CMS PAGES =====
+# ===== STRIPE CONFIGURATION =====
+
+@app.route('/api/cms/stripe-config', methods=['GET'])
+def cms_get_stripe_config():
+    """Get current Stripe configuration."""
+    if 'cms_authenticated' not in session or not session['cms_authenticated']:
+        return jsonify({'error': 'Niet geauthenticeerd'}), 401
+    
+    secret_key = os.getenv('STRIPE_SECRET_KEY', '').strip()
+    publishable_key = os.getenv('STRIPE_PUBLISHABLE_KEY', '').strip()
+    
+    return jsonify({
+        'secret_key': secret_key[:20] + '...' if secret_key else '',
+        'secret_key_full': secret_key,
+        'publishable_key': publishable_key[:20] + '...' if publishable_key else '',
+        'publishable_key_full': publishable_key,
+        'configured': bool(secret_key and publishable_key)
+    })
+
+
+@app.route('/api/cms/stripe-config', methods=['POST'])
+def cms_save_stripe_config():
+    """Save Stripe configuration to .env file."""
+    if 'cms_authenticated' not in session or not session['cms_authenticated']:
+        return jsonify({'error': 'Niet geauthenticeerd'}), 401
+    
+    data = parse_json_body()
+    secret_key = data.get('secret_key', '').strip()
+    publishable_key = data.get('publishable_key', '').strip()
+    
+    try:
+        # Read current .env file
+        env_path = os.path.join(BASE_DIR, '.env')
+        env_content = {}
+        
+        if os.path.exists(env_path):
+            with open(env_path, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith('#') and '=' in line:
+                        key, value = line.split('=', 1)
+                        env_content[key.strip()] = value.strip()
+        
+        # Update Stripe keys
+        env_content['STRIPE_SECRET_KEY'] = secret_key
+        env_content['STRIPE_PUBLISHABLE_KEY'] = publishable_key
+        
+        # Write back to file
+        with open(env_path, 'w', encoding='utf-8') as f:
+            f.write('# CMS Configuration\n')
+            f.write(f'CMS_PASSWORD={env_content.get("CMS_PASSWORD", "admin123")}\n\n')
+            f.write('# Secret key for sessions (change this in production!)\n')
+            f.write(f'SECRET_KEY={env_content.get("SECRET_KEY", "your-super-secret-key-change-this-in-production")}\n\n')
+            f.write('# Stripe Configuration\n')
+            f.write(f'STRIPE_SECRET_KEY={secret_key}\n')
+            f.write(f'STRIPE_PUBLISHABLE_KEY={publishable_key}\n')
+            f.write(f'APP_BASE_URL={env_content.get("APP_BASE_URL", "http://localhost:5000")}\n')
+        
+        # Update environment variables
+        os.environ['STRIPE_SECRET_KEY'] = secret_key
+        os.environ['STRIPE_PUBLISHABLE_KEY'] = publishable_key
+        
+        print('DEBUG: Stripe instellingen opgeslagen')
+        
+        return jsonify({'success': True, 'message': 'Stripe instellingen opgeslagen'})
+    
+    except Exception as error:
+        print(f'ERROR: Fout bij opslaan Stripe keys: {error}')
+        return jsonify({'success': False, 'error': str(error)}), 500
+
+
+@app.route('/api/cms/password', methods=['POST'])
+def cms_change_password():
+    """Change CMS password."""
+    if 'cms_authenticated' not in session or not session['cms_authenticated']:
+        return jsonify({'error': 'Niet geauthenticeerd'}), 401
+    
+    data = parse_json_body()
+    new_password = data.get('password', '').strip()
+    
+    if not new_password:
+        return jsonify({'success': False, 'error': 'Wachtwoord mag niet leeg zijn'}), 400
+    
+    if len(new_password) < 6:
+        return jsonify({'success': False, 'error': 'Wachtwoord moet minstens 6 tekens zijn'}), 400
+    
+    try:
+        # Read current .env file
+        env_path = os.path.join(BASE_DIR, '.env')
+        env_content = {}
+        
+        if os.path.exists(env_path):
+            with open(env_path, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith('#') and '=' in line:
+                        key, value = line.split('=', 1)
+                        env_content[key.strip()] = value.strip()
+        
+        # Update password
+        env_content['CMS_PASSWORD'] = new_password
+        
+        # Write back to file
+        with open(env_path, 'w', encoding='utf-8') as f:
+            f.write('# CMS Configuration\n')
+            f.write(f'CMS_PASSWORD={new_password}\n\n')
+            f.write('# Secret key for sessions (change this in production!)\n')
+            f.write(f'SECRET_KEY={env_content.get("SECRET_KEY", "your-super-secret-key-change-this-in-production")}\n\n')
+            f.write('# Stripe Configuration\n')
+            f.write(f'STRIPE_SECRET_KEY={env_content.get("STRIPE_SECRET_KEY", "")}\n')
+            f.write(f'STRIPE_PUBLISHABLE_KEY={env_content.get("STRIPE_PUBLISHABLE_KEY", "")}\n')
+            f.write(f'APP_BASE_URL={env_content.get("APP_BASE_URL", "http://localhost:5000")}\n')
+        
+        # Update environment variable and in-memory fallback value
+        global CMS_PASSWORD
+        os.environ['CMS_PASSWORD'] = new_password
+        CMS_PASSWORD = new_password
+        
+        print(f'DEBUG: CMS wachtwoord gewijzigd')
+        
+        return jsonify({'success': True, 'message': 'CMS wachtwoord opgeslagen. Log alstublieft opnieuw in.'})
+    
+    except Exception as error:
+        print(f'ERROR: Fout bij wijzigen wachtwoord: {error}')
+        return jsonify({'success': False, 'error': str(error)}), 500
 
 @app.route('/')
 def serve_index():
