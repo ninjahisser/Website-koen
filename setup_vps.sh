@@ -124,8 +124,8 @@ EOF
 echo "6. nginx configureren..."
 sudo tee "${NGINX_FILE}" >/dev/null <<EOF
 server {
-    listen 80;
-    listen [::]:80;
+    listen 80 default_server;
+    listen [::]:80 default_server;
     server_name ${DOMAIN};
 
     return 301 http://${WWW_DOMAIN}\$request_uri;
@@ -134,7 +134,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
-    server_name ${WWW_DOMAIN};
+    server_name ${WWW_DOMAIN} 136.144.201.79 _;
 
     client_max_body_size 25M;
 
