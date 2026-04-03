@@ -130,84 +130,80 @@ class ArticleLoader {
                     });
                     continue;
                 }
+                break;
             }
 
-            // Stop when no full row can be built anymore.
+            this.pendingStandaardArticles = [...largeQueue, ...smallQueue];
 
-        }
+            rows.forEach(row => {
+                const rowEl = document.createElement('div');
+                rowEl.className = 'standaard-row';
 
-        this.pendingStandaardArticles = [...largeQueue, ...smallQueue];
+                if (row.layout === 'large-left' || row.layout === 'large-right') {
+                    rowEl.classList.add('groot-row');
+                    rowEl.style.display = 'grid';
+                    rowEl.style.gridTemplateColumns = '2fr 1fr';
+                    rowEl.style.gap = '20px';
 
-        rows.forEach(row => {
-            const rowEl = document.createElement('div');
-            rowEl.className = 'standaard-row';
+                    const grootCard = this.createArticleCard(row.groot);
+                    grootCard.classList.add('large-item');
 
-            if (row.layout === 'large-left' || row.layout === 'large-right') {
-                rowEl.classList.add('groot-row');
-                rowEl.style.display = 'grid';
-                rowEl.style.gridTemplateColumns = '2fr 1fr';
-                rowEl.style.gap = '20px';
+                    const smallContainer = document.createElement('div');
+                    smallContainer.className = 'small-stack';
+                    row.smalls.forEach(item => {
+                        const card = this.createArticleCard(item);
+                        card.classList.add('small-item');
+                        smallContainer.appendChild(card);
+                    });
 
-                const grootCard = this.createArticleCard(row.groot);
-                grootCard.classList.add('large-item');
-
-                const smallContainer = document.createElement('div');
-                smallContainer.className = 'small-stack';
-                row.smalls.forEach(item => {
-                    const card = this.createArticleCard(item);
-                    card.classList.add('small-item');
-                    smallContainer.appendChild(card);
-                });
-
-                if (row.layout === 'large-left') {
-                    rowEl.appendChild(grootCard);
-                    rowEl.appendChild(smallContainer);
+                    if (row.layout === 'large-left') {
+                        rowEl.appendChild(grootCard);
+                        rowEl.appendChild(smallContainer);
+                    } else {
+                        rowEl.appendChild(smallContainer);
+                        rowEl.appendChild(grootCard);
+                    }
                 } else {
-                    rowEl.appendChild(smallContainer);
-                    rowEl.appendChild(grootCard);
+                    rowEl.classList.add('small-stack-3-row');
+                    rowEl.style.display = 'flex';
+                    rowEl.style.flexDirection = 'column';
+                    rowEl.style.gap = '20px';
+                    row.smalls.forEach(item => {
+                        const card = this.createArticleCard(item);
+                        card.classList.add('small-item');
+                        rowEl.appendChild(card);
+                    });
                 }
-            } else {
-                rowEl.classList.add('small-stack-3-row');
-                rowEl.style.display = 'flex';
-                rowEl.style.flexDirection = 'column';
-                rowEl.style.gap = '20px';
-                row.smalls.forEach(item => {
-                    const card = this.createArticleCard(item);
-                    card.classList.add('small-item');
-                    rowEl.appendChild(card);
-                });
-            }
-            container.appendChild(rowEl);
-        });
-    } else {
-    let gridClass = 'group-grid-dynamic';
-    if (groupName === 'featured') {
-        gridClass = 'featured-grid-dynamic';
-    } else if (isKleinStyleGroup) {
-        gridClass = 'klein-nieuws-grid-dynamic';
-    }
-    container.className = gridClass;
-
-    //Remove last article
-
-    articles.forEach((article) => {
-        const card = this.createArticleCard(article);
-        if (isLargeSize(article.size)) {
-            card.classList.add('large-item');
+                container.appendChild(rowEl);
+            });
         } else {
-            card.classList.add('small-item');
+            let gridClass = 'group-grid-dynamic';
+            if (groupName === 'featured') {
+                gridClass = 'featured-grid-dynamic';
+            } else if (isKleinStyleGroup) {
+                gridClass = 'klein-nieuws-grid-dynamic';
+            }
+            container.className = gridClass;
+
+            articles.forEach((article) => {
+                const card = this.createArticleCard(article);
+                if (isLargeSize(article.size)) {
+                    card.classList.add('large-item');
+                } else {
+                    card.classList.add('small-item');
+                }
+                container.appendChild(card);
+            });
         }
-        container.appendChild(card);
-    });
-}
-section.appendChild(container);
-if (groupName === 'het klein nieuws') {
-    const footer = document.createElement('div');
-    footer.className = 'klein-nieuws-footer';
-    footer.innerHTML = '<button class="btn-blue-full">BEKIJK "HET KLEIN NIEUWS"</button>';
-    section.appendChild(footer);
-}
-return section;
+
+        section.appendChild(container);
+        if (groupName === 'het klein nieuws') {
+            const footer = document.createElement('div');
+            footer.className = 'klein-nieuws-footer';
+            footer.innerHTML = '<button class="btn-blue-full">BEKIJK "HET KLEIN NIEUWS"</button>';
+            section.appendChild(footer);
+        }
+        return section;
     }
 
 createArticleCard(article) {
