@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH"
+
 REPO_URL="${REPO_URL:-https://github.com/ninjahisser/Website-koen.git}"
 INSTALL_DIR="${INSTALL_DIR:-$HOME/Website-koen}"
 
