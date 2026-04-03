@@ -17,6 +17,12 @@ Als je gewoon alles automatisch wilt laten instellen, gebruik dan dit:
 bash fix_debian.sh
 ```
 
+Of, als je wilt dat het script eerst zelf de repo van GitHub ophaalt of bijwerkt:
+
+```bash
+bash setup_vps.sh
+```
+
 Dat script doet automatisch:
 
 - packages installeren
@@ -29,7 +35,7 @@ Dat script doet automatisch:
 - bestaande kapotte nginx symlinks herstellen
 - HTTPS automatisch proberen via Let's Encrypt
 
-`setup_vps.sh` blijft ook werken en roept nu intern gewoon `fix_debian.sh` aan.
+`setup_vps.sh` werkt nu als bootstrapper: het installeert indien nodig `git`, doet `git clone` of `git pull`, en roept daarna `fix_debian.sh` uit de repo aan.
 
 Als DNS nog niet klaar is, kan HTTPS in die eerste run mislukken. Voer dan later dit uit:
 
