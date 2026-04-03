@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta
 import json
 import os
+from functools import wraps
 
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request, send_from_directory, session, redirect, url_for
 from flask_cors import CORS
+from werkzeug.security import generate_password_hash, check_password_hash
 
 from cms.article_manager import ArticleManager
 from cms.product_manager import ProductManager
@@ -70,6 +72,17 @@ print('DEBUG: stripe module:', stripe)
 app = Flask(__name__, static_folder=FRONTEND_DIR, static_url_path='')
 CORS(app)
 
+# Session-configuratie
+app.secret_key = os.getenv('SECRET_KEY', 'change_this_in_production_12345')
+app.config['SESSION_COOKIE_SECURE'] = False  # Set True for HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
+
+# CMS-wachtwoord (stel in via .env variabele CMS_PASSWORD)
+CMS_PASSWORD = os.getenv('CMS_PASSWORD', 'admin123')
+print(f'DEBUG: CMS_PASSWORD geladen: {CMS_PASSWORD[:5]}...' if CMS_PASSWORD else 'DEBUG: CMS_PASSWORD is LEEG!')
+
 article_manager = ArticleManager(ARTICLES_DIR)
 product_manager = ProductManager(PRODUCTS_DIR)
 order_manager = OrderManager(os.path.join(BASE_DIR, 'orders'))
@@ -80,6 +93,16 @@ if stripe and STRIPE_SECRET_KEY:
 
 def parse_json_body():
     return request.get_json(silent=True) or {}
+
+
+def require_cms_auth(f):
+    """Decorator to require CMS authentication."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'cms_authenticated' not in session or not session['cms_authenticated']:
+            return redirect('/cms-login')
+        return f(*args, **kwargs)
+    return decorated_function
 
 
 def load_views():
@@ -595,6 +618,47 @@ def upload_image():
         return jsonify({'error': str(error)}), 500
 
 
+# ===== CMS AUTHENTICATION =====
+
+@app.route('/api/cms/login', methods=['POST'])
+def cms_login():
+    """Login endpoint for CMS."""
+    data = parse_json_body()
+    password = data.get('password', '').strip()
+    
+    print(f'DEBUG: Login attempt with password length: {len(password)}')
+    print(f'DEBUG: Expected CMS_PASSWORD: {repr(CMS_PASSWORD)}')
+    print(f'DEBUG: Received password: {repr(password)}')
+    
+    if not password:
+        return jsonify({'success': False, 'error': 'Wachtwoord is verplicht'}), 400
+    
+    if password == CMS_PASSWORD:
+        print(f'DEBUG: Wachtwoord correct! Session aangemaakt.')
+        session.permanent = True
+        session['cms_authenticated'] = True
+        return jsonify({'success': True, 'message': 'Ingelogd'})
+    else:
+        print(f'DEBUG: Wachtwoord onjuist! {repr(password)} != {repr(CMS_PASSWORD)}')
+        return jsonify({'success': False, 'error': 'Onjuist wachtwoord'}), 401
+
+
+@app.route('/api/cms/logout', methods=['POST'])
+def cms_logout():
+    """Logout endpoint for CMS."""
+    session.pop('cms_authenticated', None)
+    return jsonify({'success': True, 'message': 'Uitgelogd'})
+
+
+@app.route('/api/cms/status', methods=['GET'])
+def cms_status():
+    """Check if user is authenticated."""
+    is_authenticated = session.get('cms_authenticated', False)
+    return jsonify({'authenticated': is_authenticated})
+
+
+# ===== PROTECTED CMS PAGES =====
+
 @app.route('/')
 def serve_index():
     return send_from_directory(FRONTEND_DIR, 'index.html')
@@ -610,28 +674,44 @@ def serve_cart():
     return send_from_directory(FRONTEND_DIR, 'cart.html')
 
 
+@app.route('/cms-login')
+def serve_cms_login():
+    """Public login page."""
+    return send_from_directory(FRONTEND_DIR, 'cms-login.html')
+
+
 @app.route('/cms')
 def serve_cms():
+    if 'cms_authenticated' not in session or not session['cms_authenticated']:
+        return redirect('/cms-login')
     return send_from_directory(FRONTEND_DIR, 'cms.html')
 
 
 @app.route('/cms-edit')
 def serve_cms_edit():
+    if 'cms_authenticated' not in session or not session['cms_authenticated']:
+        return redirect('/cms-login')
     return send_from_directory(FRONTEND_DIR, 'cms-edit.html')
 
 
 @app.route('/cms-create')
 def serve_cms_create():
+    if 'cms_authenticated' not in session or not session['cms_authenticated']:
+        return redirect('/cms-login')
     return send_from_directory(FRONTEND_DIR, 'cms-create.html')
 
 
 @app.route('/cms-product-create')
 def serve_cms_product_create():
+    if 'cms_authenticated' not in session or not session['cms_authenticated']:
+        return redirect('/cms-login')
     return send_from_directory(FRONTEND_DIR, 'cms-product-create.html')
 
 
 @app.route('/cms-product-edit')
 def serve_cms_product_edit():
+    if 'cms_authenticated' not in session or not session['cms_authenticated']:
+        return redirect('/cms-login')
     return send_from_directory(FRONTEND_DIR, 'cms-product-edit.html')
 
 

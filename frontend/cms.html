@@ -5,19 +5,85 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CMS - Content en shop</title>
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        /* Simpele CMS navbar */
+        .cms-navbar {
+            background-color: #2d5f4f;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .cms-navbar-inner {
+            width: 100%;
+            max-width: 1400px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 30px;
+            flex-wrap: wrap;
+        }
+
+        .cms-logo {
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            text-decoration: none;
+            margin-right: auto;
+            white-space: nowrap;
+            display: inline-block;
+        }
+
+        .cms-nav-btn {
+            display: inline-block;
+            padding: 9px 16px;
+            background-color: #1a3a2e;
+            color: white;
+            text-decoration: none;
+            border: 2px solid #4a8b78;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            line-height: 1;
+            text-align: center;
+        }
+
+        .cms-nav-btn:hover {
+            background-color: #4a8b78;
+            border-color: #6ab399;
+        }
+
+        .cms-logout-btn {
+            background-color: #c74a2e;
+            border-color: #e67350;
+        }
+
+        .cms-logout-btn:hover {
+            background-color: #e67350;
+            border-color: #f0a08a;
+        }
+
+        /* Verberg originele navbar */
+        .cms-page .navbar {
+            display: none;
+        }
+    </style>
 </head>
 <body class="cms-page">
-    <nav class="navbar">
-        <div class="navbar-container">
-            <div class="nav-top-bar">
-                <a href="/" class="logo" style="text-decoration: none; color: inherit;">HVLN CMS</a>
-                <ul class="nav-menu">
-                    <li><a href="/" class="nav-link">Site</a></li>
-                    <li><a href="/shop" class="nav-link">Shop</a></li>
-                </ul>
-            </div>
+    <div class="cms-navbar">
+        <div class="cms-navbar-inner">
+            <a href="/" class="cms-logo">Studio Malem CMS</a>
+            <a href="/" class="cms-nav-btn">← Terug naar home</a>
+            <a href="/shop" class="cms-nav-btn">Naar shop</a>
+            <button id="logout-btn" class="cms-nav-btn cms-logout-btn">Uitloggen</button>
         </div>
-    </nav>
+    </div>
     <div class="content-wrapper">
         <h1 class="cms-title">CMS beheer</h1>
         <div class="cms-tabs">

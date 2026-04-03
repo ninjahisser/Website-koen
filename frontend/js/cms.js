@@ -1,3 +1,32 @@
+// Logout functie
+document.addEventListener('DOMContentLoaded', () => {
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            
+            if (!confirm('Weet je zeker dat je uit wilt loggen?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/cms/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    window.location.href = '/cms-login';
+                }
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        });
+    }
+});
+
 function formatPrice(priceCents, currency = 'eur') {
     return new Intl.NumberFormat('nl-BE', {
         style: 'currency',
