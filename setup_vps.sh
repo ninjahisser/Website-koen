@@ -8,7 +8,6 @@ REPO_URL="${REPO_URL:-https://github.com/ninjahisser/Website-koen.git}"
 APP_NAME="${APP_NAME:-studiomalem}"
 INSTALL_DIR="${INSTALL_DIR:-$HOME/Website-koen}"
 APP_BASE_URL="${APP_BASE_URL:-https://$WWW_DOMAIN}"
-LETSENCRYPT_EMAIL="${LETSENCRYPT_EMAIL:-}"
 CMS_PASSWORD_VALUE="${CMS_PASSWORD_VALUE:-ChangeMeNow123!}"
 SECRET_KEY_VALUE="${SECRET_KEY_VALUE:-$(python3 - <<'PY'
 import secrets
@@ -164,14 +163,10 @@ sudo nginx -t
 sudo systemctl restart nginx
 
 echo "8. HTTPS proberen inschakelen..."
-if [ -n "${LETSENCRYPT_EMAIL}" ]; then
-    if sudo certbot --nginx --non-interactive --agree-tos -m "${LETSENCRYPT_EMAIL}" -d "${DOMAIN}" -d "${WWW_DOMAIN}"; then
-        echo "HTTPS succesvol ingesteld."
-    else
-        echo "WAARSCHUWING: Certbot kon geen certificaat ophalen. Controleer DNS en probeer later opnieuw."
-    fi
+if sudo certbot --nginx --non-interactive --agree-tos --register-unsafely-without-email -d "${DOMAIN}" -d "${WWW_DOMAIN}"; then
+    echo "HTTPS succesvol ingesteld."
 else
-    echo "LETSENCRYPT_EMAIL niet gezet, HTTPS stap overgeslagen."
+    echo "WAARSCHUWING: Certbot kon geen certificaat ophalen. Controleer DNS en probeer later opnieuw."
 fi
 
 echo

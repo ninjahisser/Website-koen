@@ -14,8 +14,7 @@ De app zelf draait intern op `127.0.0.1:5000`.
 Als je gewoon alles automatisch wilt laten instellen, gebruik dan dit:
 
 ```bash
-chmod +x setup_vps.sh
-LETSENCRYPT_EMAIL=jouw-email@voorbeeld.be ./setup_vps.sh
+bash setup_vps.sh
 ```
 
 Dat script doet automatisch:
@@ -27,9 +26,13 @@ Dat script doet automatisch:
 - `backend/.env` aanmaken of aanvullen
 - Gunicorn systemd service maken
 - nginx reverse proxy instellen
-- HTTPS proberen activeren via Let's Encrypt
+- HTTPS automatisch proberen via Let's Encrypt
 
-Als je geen `LETSENCRYPT_EMAIL` meegeeft, wordt HTTPS overgeslagen en kan je dat later nog apart doen.
+Als DNS nog niet klaar is, kan HTTPS in die eerste run mislukken. Voer dan later dit uit:
+
+```bash
+sudo certbot --nginx -d studiomalem.be -d www.studiomalem.be
+```
 
 ## 1. DNS instellen
 
