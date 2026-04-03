@@ -14,19 +14,22 @@ De app zelf draait intern op `127.0.0.1:5000`.
 Als je gewoon alles automatisch wilt laten instellen, gebruik dan dit:
 
 ```bash
-bash setup_vps.sh
+bash fix_debian.sh
 ```
 
 Dat script doet automatisch:
 
 - packages installeren
-- repo updaten
+- repo gebruiken of clonen als die ontbreekt
 - Python venv maken
 - requirements installeren
 - `backend/.env` aanmaken of aanvullen
 - Gunicorn systemd service maken
-- nginx reverse proxy instellen
+- nginx default site uitschakelen en juiste proxy-config schrijven
+- bestaande kapotte nginx symlinks herstellen
 - HTTPS automatisch proberen via Let's Encrypt
+
+`setup_vps.sh` blijft ook werken en roept nu intern gewoon `fix_debian.sh` aan.
 
 Als DNS nog niet klaar is, kan HTTPS in die eerste run mislukken. Voer dan later dit uit:
 
