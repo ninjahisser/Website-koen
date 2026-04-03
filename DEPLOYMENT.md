@@ -1,213 +1,169 @@
-# Deployment Guide - Het Voorlaatste Nieuws
+# Deployment Guide
 
-## Overview
-- **Frontend**: GitHub Pages (static HTML/CSS/JS)
-- **Backend**: PythonAnywhere (Flask API)
-- **Username**: SethVdB
+Deze handleiding is voor een Debian of Ubuntu VPS met:
 
----
+- nginx op poort 80 en 443
+- Gunicorn voor de Flask app
+- systemd om de app automatisch te starten
+- Let's Encrypt voor HTTPS
 
-## Part 1: Deploy Backend to PythonAnywhere
+De app zelf draait intern op `127.0.0.1:5000`.
 
-### 1. Create PythonAnywhere Account
-1. Go to https://www.pythonanywhere.com/
-2. Sign up with username: `SethVdB` (already configured in config.js)
-3. Choose the free "Beginner" account
+## Snelle start
 
-### 2. Upload Your Code
-**Option A - Using Git (Recommended):**
+Als je gewoon alles automatisch wilt laten instellen, gebruik dan dit:
+
 ```bash
-# On PythonAnywhere Console
+chmod +x setup_vps.sh
+LETSENCRYPT_EMAIL=jouw-email@voorbeeld.be ./setup_vps.sh
+```
+
+Dat script doet automatisch:
+
+- packages installeren
+- repo updaten
+- Python venv maken
+- requirements installeren
+- `backend/.env` aanmaken of aanvullen
+- Gunicorn systemd service maken
+- nginx reverse proxy instellen
+- HTTPS proberen activeren via Let's Encrypt
+
+Als je geen `LETSENCRYPT_EMAIL` meegeeft, wordt HTTPS overgeslagen en kan je dat later nog apart doen.
+
+## 1. DNS instellen
+
+Zet bij je domeinprovider deze A-records naar je VPS IP:
+
+- `studiomalem.be` -> `136.144.201.79`
+- `www.studiomalem.be` -> `136.144.201.79`
+
+Verwijder oude records die nog naar een ander IP verwijzen.
+
+## 2. Server packages installeren
+
+```bash
+sudo apt update
+sudo apt install -y nginx python3-pip python3-venv certbot python3-certbot-nginx git
+```
+
+## 3. Repo clonen en Python environment maken
+
+```bash
 cd ~
-git clone https://github.com/yourusername/yourrepo.git HetVoorlaatsteNieuws
-cd HetVoorlaatsteNieuws
+git clone https://github.com/ninjahisser/Website-koen.git
+cd Website-koen/backend
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 ```
 
-**Option B - Manual Upload:**
-1. Go to "Files" tab
-2. Create folder: `/home/SethVdB/HetVoorlaatsteNieuws`
-3. Upload all files from your local `Uitwerking` folder
+## 4. Environment bestand controleren
 
-### 3. Set Up Virtual Environment
+Controleer of `backend/.env` bestaat en minstens deze waarden bevat:
+
+```dotenv
+CMS_PASSWORD=vervang-dit
+SECRET_KEY=vervang-dit-met-een-lange-random-string
+STRIPE_SECRET_KEY=
+STRIPE_PUBLISHABLE_KEY=
+APP_BASE_URL=https://www.studiomalem.be
+```
+
+## 5. systemd service instellen
+
+Er staat een voorbeeldbestand in [deploy/systemd/studiomalem.service](deploy/systemd/studiomalem.service).
+
+Pas eerst deze regels aan:
+
+- `User=sethv`
+- alle `/home/sethv/...` paden
+
+Vervang `sethv` door je echte Linux gebruikersnaam op de VPS.
+
+Daarna:
+
 ```bash
-# In PythonAnywhere Bash console
-cd ~/HetVoorlaatsteNieuws
-mkvirtualenv --python=/usr/bin/python3.10 hvln-env
-pip install -r backend/requirements.txt
+cd ~/Website-koen
+sudo cp deploy/systemd/studiomalem.service /etc/systemd/system/studiomalem.service
+sudo systemctl daemon-reload
+sudo systemctl enable studiomalem
+sudo systemctl start studiomalem
+sudo systemctl status studiomalem
 ```
 
-### 4. Configure Web App
-1. Go to **Web** tab
-2. Click **Add a new web app**
-3. Choose **Manual configuration** (not Flask wizard)
-4. Choose **Python 3.10**
+## 6. nginx instellen
 
-### 5. Configure WSGI File
-1. In Web tab, click on WSGI configuration file link
-2. **Delete all content** and replace with:
+Er staat een voorbeeldbestand in [deploy/nginx/studiomalem.be.conf](deploy/nginx/studiomalem.be.conf).
 
-```python
-import sys
-import os
+Dat bestand doet dit:
 
-# Add your project directory to the sys.path
-project_home = '/home/SethVdB/HetVoorlaatsteNieuws'
-if project_home not in sys.path:
-    sys.path.insert(0, project_home)
+- redirect van `studiomalem.be` naar `www.studiomalem.be`
+- reverse proxy van `www.studiomalem.be` naar `127.0.0.1:5000`
 
-backend_path = os.path.join(project_home, 'backend')
-if backend_path not in sys.path:
-    sys.path.insert(0, backend_path)
+Activeer het zo:
 
-from backend.server import app as application
-```
-
-3. Save the file
-
-### 6. Set Virtual Environment Path
-In the Web tab, under "Virtualenv" section:
-- Enter: `/home/SethVdB/.virtualenvs/hvln-env`
-
-### 7. Reload and Test
-1. Click the green **Reload** button
-2. Visit: `https://SethVdB.pythonanywhere.com/api/articles`
-3. You should see your articles JSON!
-
----
-
-## Part 2: Deploy Frontend to GitHub Pages
-
-### 1. Create GitHub Repository
 ```bash
-# In your local project folder
-cd "f:\LUCA-3\Stage\HetVoorlaatsteNieuws\Uitwerking"
-git init
-git add .
-git commit -m "Initial commit"
+cd ~/Website-koen
+sudo cp deploy/nginx/studiomalem.be.conf /etc/nginx/sites-available/studiomalem.be.conf
+sudo ln -s /etc/nginx/sites-available/studiomalem.be.conf /etc/nginx/sites-enabled/studiomalem.be.conf
+sudo rm -f /etc/nginx/sites-enabled/default
+sudo nginx -t
+sudo systemctl restart nginx
 ```
 
-### 2. Push to GitHub
+## 7. HTTPS inschakelen
+
+Als DNS goed staat en nginx bereikbaar is op poort 80:
+
 ```bash
-# Create repo on GitHub first, then:
-git remote add origin https://github.com/yourusername/het-voorlaatste-nieuws.git
-git branch -M main
-git push -u origin main
+sudo certbot --nginx -d studiomalem.be -d www.studiomalem.be
 ```
 
-### 3. Enable GitHub Pages
-1. Go to your GitHub repository settings
-2. Click **Pages** (left sidebar)
-3. Under "Source", select **main** branch
-4. Choose **/ (root)** folder
-5. Click **Save**
+Daarna zou je site bereikbaar moeten zijn op:
 
-### 4. Configure for GitHub Pages
-Since your frontend files are in the `frontend/` folder, you have two options:
+- `https://www.studiomalem.be`
 
-**Option A - Move frontend files to root** (Recommended):
+## 8. Updaten na wijzigingen
+
 ```bash
-# Move frontend files to root
-mv frontend/* .
-mv frontend/.* . 2>/dev/null || true
-rmdir frontend
-git add .
-git commit -m "Move frontend to root for GitHub Pages"
-git push
-```
-
-**Option B - Change GitHub Pages source folder:**
-- In GitHub Pages settings, select `/frontend` as source folder (if available)
-
-### 5. Test Your Site
-Your site will be available at:
-- `https://yourusername.github.io/het-voorlaatste-nieuws/`
-
----
-
-## Part 3: Verify Everything Works
-
-### Backend Test Endpoints
-Test these URLs work:
-- `https://SethVdB.pythonanywhere.com/api/articles`
-- `https://SethVdB.pythonanywhere.com/api/groups`
-- `https://SethVdB.pythonanywhere.com/api/site`
-
-### Frontend Test
-1. Open your GitHub Pages URL
-2. Check browser console (F12) for any errors
-3. Verify articles load from PythonAnywhere API
-4. Test CMS functionality
-
----
-
-## Troubleshooting
-
-### Backend Issues
-
-**"Internal Server Error":**
-- Check PythonAnywhere error log (Web tab → Error log)
-- Verify virtual environment path is correct
-- Make sure all files uploaded correctly
-
-**"ModuleNotFoundError":**
-- Check requirements.txt installed: `pip list` in console
-- Verify WSGI path configuration
-
-**CORS Errors:**
-- Already configured with `CORS(app)` in server.py
-- Should work fine
-
-### Frontend Issues
-
-**"Failed to load articles":**
-- Check config.js has correct URL
-- Verify PythonAnywhere backend is running
-- Check browser console for CORS/network errors
-
-**404 Not Found:**
-- Make sure frontend files are in root or correct folder
-- Check GitHub Pages settings
-
----
-
-## Important Files
-
-- `backend/requirements.txt` - Python dependencies
-- `frontend/js/config.js` - API URL configuration (already set!)
-- `pythonanywhere_wsgi.py` - PythonAnywhere WSGI config
-- `.gitignore` - Files to exclude from Git
-
----
-
-## Cost Summary
-
-- PythonAnywhere: **FREE** (beginner account)
-- GitHub Pages: **FREE**
-- **Total: $0/month** 🎉
-
----
-
-## Maintenance
-
-### Update Backend Code
-```bash
-# SSH to PythonAnywhere
-cd ~/HetVoorlaatsteNieuws
+cd ~/Website-koen
 git pull
-# Click "Reload" button in Web tab
+cd backend
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+sudo systemctl restart studiomalem
 ```
 
-### Update Frontend Code
+## 9. Problemen controleren
+
+Service status:
+
 ```bash
-# Local machine
-git add .
-git commit -m "Update frontend"
-git push
-# GitHub Pages auto-updates in ~1 minute
+sudo systemctl status studiomalem
 ```
 
----
+Gunicorn logs:
 
-## Need Help?
-- PythonAnywhere forums: https://www.pythonanywhere.com/forums/
-- GitHub Pages docs: https://docs.github.com/pages
+```bash
+journalctl -u studiomalem -n 100 --no-pager
+```
+
+nginx test:
+
+```bash
+sudo nginx -t
+```
+
+nginx logs:
+
+```bash
+sudo tail -n 100 /var/log/nginx/error.log
+```
+
+## 10. Belangrijk
+
+Je domein gaat niet rechtstreeks naar poort `5000`.
+
+Dat is normaal. Bezoekers gaan naar poort `80` of `443`, en nginx stuurt dat intern door naar de Flask app op `127.0.0.1:5000`.

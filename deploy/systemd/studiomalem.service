@@ -1,0 +1,15 @@
+[Unit]
+Description=Studio Malem Flask app via Gunicorn
+After=network.target
+
+[Service]
+User=sethv
+Group=www-data
+WorkingDirectory=/home/sethv/Website-koen/backend
+Environment="PATH=/home/sethv/Website-koen/backend/.venv/bin"
+ExecStart=/home/sethv/Website-koen/backend/.venv/bin/gunicorn --workers 3 --bind 127.0.0.1:5000 server:app
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
