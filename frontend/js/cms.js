@@ -34,6 +34,168 @@ function formatPrice(priceCents, currency = 'eur') {
     }).format((priceCents || 0) / 100);
 }
 
+function getYouTubeVideoId(src) {
+    if (!src) return '';
+    try {
+        const url = new URL(src);
+        if (url.hostname.includes('youtube.com')) {
+            if (url.pathname === '/watch') {
+                return url.searchParams.get('v') || '';
+            }
+            if (url.pathname.startsWith('/embed/')) {
+                return url.pathname.replace('/embed/', '').split('/')[0];
+            }
+        }
+        if (url.hostname.includes('youtu.be')) {
+            return url.pathname.replace('/', '').split('/')[0];
+        }
+    } catch (error) {
+        return '';
+    }
+    return '';
+}
+
+function getArticleThumbnailPreview(article) {
+    const fallback = { src: '/img/studiomalem_header.png', isVideo: false, isText: false };
+    if (!article) return fallback;
+
+    const rawSize = (article.size || '').toString().trim().toLowerCase();
+    const normalizedSize = rawSize === 'teskt' ? 'tekst' : rawSize;
+    if (normalizedSize === 'tekst') {
+        return {
+            isText: true,
+            isVideo: false,
+            src: '',
+            title: article.title || 'Tekstartikel',
+            category: article.category || ''
+        };
+    }
+
+    const thumbnail = article.thumbnail || null;
+    const components = Array.isArray(article.components) ? article.components : [];
+
+    const firstImage = components.find(c => c && c.type === 'image' && c.src);
+    const firstVideo = components.find(c => c && c.type === 'video' && c.src);
+    const firstInOrder = components.find(c => c && (c.type === 'image' || c.type === 'video') && c.src);
+
+    let media = null;
+    if (thumbnail && (thumbnail.mode === 'custom-url' || thumbnail.mode === 'upload') && thumbnail.src) {
+        media = { type: thumbnail.kind === 'video' ? 'video' : 'image', src: thumbnail.src };
+    } else if (thumbnail && thumbnail.mode === 'auto-video' && firstVideo) {
+        media = { type: 'video', src: firstVideo.src };
+    } else if (thumbnail && thumbnail.mode === 'auto-image' && firstImage) {
+        media = { type: 'image', src: firstImage.src };
+    } else if (thumbnail && thumbnail.mode === 'auto-first' && firstInOrder) {
+        media = { type: firstInOrder.type, src: firstInOrder.src };
+    } else if (firstInOrder) {
+        media = { type: firstInOrder.type, src: firstInOrder.src };
+    }
+
+    if (!media || !media.src) {
+        return fallback;
+    }
+
+    if (media.type === 'video') {
+        const ytId = getYouTubeVideoId(media.src);
+        if (ytId) {
+            return { src: `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`, isVideo: true };
+        }
+        return { src: resolveMediaUrl(media.src), isVideo: true };
+    }
+
+    return { src: resolveMediaUrl(media.src), isVideo: false };
+}
+
+let isArticleOrderDirty = false;
+let autoSaveOrderTimer = null;
+
+function markArticleOrderDirty(dirty) {
+    isArticleOrderDirty = !!dirty;
+}
+
+function scheduleAutoSaveArticleOrder() {
+    markArticleOrderDirty(true);
+    if (autoSaveOrderTimer) {
+        clearTimeout(autoSaveOrderTimer);
+    }
+    autoSaveOrderTimer = setTimeout(() => {
+        saveArticleOrder(true);
+    }, 250);
+}
+
+function getArticleOrderFromDom() {
+    return Array.from(document.querySelectorAll('#articles-container .cms-article-card[data-article-id]'))
+        .map(card => card.dataset.articleId)
+        .filter(Boolean);
+}
+
+function moveArticleCard(articleId, direction) {
+    const card = document.querySelector(`#articles-container .cms-article-card[data-article-id="${articleId}"]`);
+    if (!card) return;
+
+    if (direction === 'left') {
+        const prev = card.previousElementSibling;
+        if (!prev) return;
+        prev.insertAdjacentElement('beforebegin', card);
+        scheduleAutoSaveArticleOrder();
+        return;
+    }
+
+    if (direction === 'right') {
+        const next = card.nextElementSibling;
+        if (!next) return;
+        next.insertAdjacentElement('afterend', card);
+        scheduleAutoSaveArticleOrder();
+    }
+}
+
+async function saveArticleOrder(isAutomatic = false) {
+    const order = getArticleOrderFromDom();
+    if (!order.length) {
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/articles/reorder`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ article_ids: order })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.error || 'Volgorde opslaan mislukt');
+        }
+        markArticleOrderDirty(false);
+    } catch (error) {
+        if (isAutomatic) {
+            console.error('Automatisch opslaan van volgorde mislukt:', error);
+        } else {
+            alert(`Fout bij opslaan volgorde: ${error.message}`);
+        }
+    }
+}
+
+async function resetSingleArticleOrder(articleId) {
+    if (!articleId) return;
+    if (!confirm('Ben je zeker dat je de volgorde van dit artikel wilt resetten naar de standaardpositie?')) {
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/articles/${encodeURIComponent(articleId)}/reorder/reset`, {
+            method: 'POST'
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.error || 'Reset mislukt');
+        }
+        await loadArticles();
+        markArticleOrderDirty(false);
+    } catch (error) {
+        alert(`Fout bij resetten van artikelvolgorde: ${error.message}`);
+    }
+}
+
 async function loadStats() {
     const statsContainer = document.getElementById('stats-container');
     statsContainer.innerHTML = 'Statistieken laden...';
@@ -88,16 +250,58 @@ async function loadArticles() {
         const res = await fetch(`${API_BASE_URL}/articles`);
         const articles = await res.json();
         container.innerHTML = articles.map(article => `
-            <div class="cms-article-card">
+            <div class="cms-article-card" data-article-id="${article.id}">
+                ${(() => {
+                    const thumb = getArticleThumbnailPreview(article);
+                    if (thumb.isText) {
+                        return `
+                            <div class="cms-article-thumb-wrap">
+                                <div class="cms-article-thumb-text" aria-label="Tekstartikel preview">
+                                    ${thumb.category ? `<div class="cms-article-thumb-text-label">${thumb.category.toUpperCase()}</div>` : ''}
+                                    <div class="cms-article-thumb-text-title">${thumb.title}</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    return `
+                        <div class="cms-article-thumb-wrap">
+                            <img class="cms-article-thumb" src="${thumb.src}" alt="Thumbnail van ${article.title || 'artikel'}" loading="lazy" onerror="this.src='/img/studiomalem_header.png'">
+                            ${thumb.isVideo ? '<span class="cms-article-thumb-badge">VIDEO</span>' : ''}
+                        </div>
+                    `;
+                })()}
                 <h3><a class="cms-article-link" href="/article/${article.id}" target="_blank" rel="noopener">${article.title}</a></h3>
-                <div class="cms-card-actions">
+                <p class="cms-article-meta">Categorie: ${article.category || '-'}</p>
+                <p class="cms-article-meta">Groep: ${article.group || 'standaard'}</p>
+                <div class="cms-card-actions cms-card-actions-article">
+                    <div class="cms-article-order-arrows">
+                        <button type="button" data-move-article="left" data-article-id="${article.id}" title="Naar links">←</button>
+                        <button type="button" data-move-article="right" data-article-id="${article.id}" title="Naar rechts">→</button>
+                    </div>
+                    <button type="button" data-reset-article-order="${article.id}" title="Reset volgorde voor dit artikel">Reset volgorde</button>
+                    <hr class="cms-action-divider">
                     <button onclick="editArticle('${article.id}')">Aanpassen</button>
                     <a class="cms-button cms-button-small" href="/article/${article.id}" target="_blank" rel="noopener">Bekijk</a>
+                    <hr class="cms-action-divider">
                     <button onclick="deleteArticle('${article.id}')">Verwijderen</button>
                 </div>
                 <span>Views: ${article.views} | Clicks: ${article.clicks}</span>
             </div>
         `).join('');
+        container.querySelectorAll('button[data-move-article]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const direction = btn.getAttribute('data-move-article');
+                const articleId = btn.getAttribute('data-article-id');
+                moveArticleCard(articleId, direction);
+            });
+        });
+        container.querySelectorAll('button[data-reset-article-order]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const articleId = btn.getAttribute('data-reset-article-order');
+                resetSingleArticleOrder(articleId);
+            });
+        });
+        markArticleOrderDirty(false);
     } catch (error) {
         container.innerHTML = 'Fout bij laden van artikels.';
     }
@@ -122,6 +326,189 @@ async function loadProducts() {
         `).join('');
     } catch (error) {
         container.innerHTML = 'Fout bij laden van producten.';
+    }
+}
+
+function escapeHtml(value) {
+    return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function setTaxonomyStatus(message, kind = '') {
+    const statusEl = document.getElementById('taxonomy-status');
+    if (!statusEl) return;
+    statusEl.textContent = message || '';
+    statusEl.className = `cms-status${kind ? ` cms-status-${kind}` : ''}`;
+}
+
+async function loadTaxonomies() {
+    const groupsContainer = document.getElementById('taxonomy-groups-container');
+    const categoriesContainer = document.getElementById('taxonomy-categories-container');
+    if (!groupsContainer || !categoriesContainer) return;
+
+    groupsContainer.innerHTML = '<p class="cms-taxonomy-empty">Laden...</p>';
+    categoriesContainer.innerHTML = '<p class="cms-taxonomy-empty">Laden...</p>';
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/taxonomies`);
+        if (!res.ok) {
+            throw new Error('Kon taxonomies niet laden');
+        }
+        const data = await res.json();
+        const groups = Array.isArray(data.groups) ? data.groups : [];
+        const categories = Array.isArray(data.categories) ? data.categories : [];
+
+        if (groups.length === 0) {
+            groupsContainer.innerHTML = '<p class="cms-taxonomy-empty">Nog geen groups.</p>';
+        } else {
+            groupsContainer.innerHTML = `
+                <div class="cms-taxonomy-list">
+                    ${groups.map(group => `
+                        <div class="cms-taxonomy-item">
+                            <div>
+                                <div class="cms-taxonomy-item-name">${escapeHtml(group.name)}</div>
+                                <div class="cms-taxonomy-item-meta">${group.count || 0} artikel(s)${group.custom ? ' · custom' : ''}</div>
+                            </div>
+                            <div class="cms-taxonomy-item-actions">
+                                <label class="cms-article-meta" style="display:flex;align-items:center;gap:6px;margin:0;">
+                                    <input type="checkbox" data-taxonomy-action="toggle-highlight-group" data-name="${escapeHtml(group.name)}" ${group.highlighted ? 'checked' : ''}>
+                                    highlighted
+                                </label>
+                                <button class="cms-button cms-button-small" data-taxonomy-action="delete-group" data-name="${escapeHtml(group.name)}">Verwijderen</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        if (categories.length === 0) {
+            categoriesContainer.innerHTML = '<p class="cms-taxonomy-empty">Nog geen categorieen.</p>';
+        } else {
+            categoriesContainer.innerHTML = `
+                <div class="cms-taxonomy-list">
+                    ${categories.map(category => `
+                        <div class="cms-taxonomy-item">
+                            <div>
+                                <div class="cms-taxonomy-item-name">${escapeHtml(category.name)}</div>
+                                <div class="cms-taxonomy-item-meta">${category.count || 0} artikel(s)${category.custom ? ' · custom' : ''}</div>
+                            </div>
+                            <div class="cms-taxonomy-item-actions">
+                                <button class="cms-button cms-button-small" data-taxonomy-action="delete-category" data-name="${escapeHtml(category.name)}">Verwijderen</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+    } catch (error) {
+        groupsContainer.innerHTML = '<p class="cms-taxonomy-empty">Fout bij laden van groups.</p>';
+        categoriesContainer.innerHTML = '<p class="cms-taxonomy-empty">Fout bij laden van categorieen.</p>';
+        setTaxonomyStatus(error.message || 'Fout bij laden', 'error');
+    }
+}
+
+async function addTaxonomyGroup() {
+    const input = document.getElementById('new-taxonomy-group');
+    const value = input ? input.value.trim() : '';
+    if (!value) {
+        setTaxonomyStatus('Geef een groupnaam op.', 'error');
+        return;
+    }
+    try {
+        const res = await fetch(`${API_BASE_URL}/taxonomies/groups`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: value })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Toevoegen mislukt');
+        if (input) input.value = '';
+        setTaxonomyStatus('Group toegevoegd.', 'success');
+        await loadTaxonomies();
+    } catch (error) {
+        setTaxonomyStatus(error.message || 'Fout bij toevoegen', 'error');
+    }
+}
+
+async function addTaxonomyCategory() {
+    const input = document.getElementById('new-taxonomy-category');
+    const value = input ? input.value.trim() : '';
+    if (!value) {
+        setTaxonomyStatus('Geef een categorienaam op.', 'error');
+        return;
+    }
+    try {
+        const res = await fetch(`${API_BASE_URL}/taxonomies/categories`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: value })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Toevoegen mislukt');
+        if (input) input.value = '';
+        setTaxonomyStatus('Categorie toegevoegd.', 'success');
+        await loadTaxonomies();
+    } catch (error) {
+        setTaxonomyStatus(error.message || 'Fout bij toevoegen', 'error');
+    }
+}
+
+async function handleTaxonomyAction(event) {
+    const target = event.target;
+    if (!target || !target.dataset) return;
+    const action = target.dataset.taxonomyAction;
+    const name = (target.dataset.name || '').trim();
+    if (!action || !name) return;
+
+    try {
+        if (action === 'toggle-highlight-group') {
+            const res = await fetch(`${API_BASE_URL}/taxonomies/groups/${encodeURIComponent(name)}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ highlighted: !!target.checked })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Opslaan mislukt');
+            setTaxonomyStatus('Highlight bijgewerkt.', 'success');
+            return;
+        }
+
+        if (action === 'delete-group') {
+            if (!confirm(`Group "${name}" verwijderen? Artikelen worden naar "standaard" verplaatst.`)) {
+                return;
+            }
+            const res = await fetch(`${API_BASE_URL}/taxonomies/groups/${encodeURIComponent(name)}`, {
+                method: 'DELETE'
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Verwijderen mislukt');
+            setTaxonomyStatus(`Group verwijderd. ${data.reassignedArticles || 0} artikel(s) verplaatst.`, 'success');
+            await loadTaxonomies();
+            await loadArticles();
+            return;
+        }
+
+        if (action === 'delete-category') {
+            if (!confirm(`Categorie "${name}" verwijderen? Categorie wordt leeggemaakt op gekoppelde artikels.`)) {
+                return;
+            }
+            const res = await fetch(`${API_BASE_URL}/taxonomies/categories/${encodeURIComponent(name)}`, {
+                method: 'DELETE'
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Verwijderen mislukt');
+            setTaxonomyStatus(`Categorie verwijderd. ${data.updatedArticles || 0} artikel(s) aangepast.`, 'success');
+            await loadTaxonomies();
+            await loadArticles();
+        }
+    } catch (error) {
+        setTaxonomyStatus(error.message || 'Fout bij bewerken', 'error');
+        await loadTaxonomies();
     }
 }
 
@@ -366,6 +753,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabBtns = document.querySelectorAll('.cms-tab-btn');
     const tabContents = {
         'cms-tab-orders': document.getElementById('cms-tab-orders'),
+        'cms-tab-articles': document.getElementById('cms-tab-articles'),
+        'cms-tab-taxonomy': document.getElementById('cms-tab-taxonomy'),
         'cms-tab-products': document.getElementById('cms-tab-products'),
         'cms-tab-content': document.getElementById('cms-tab-content'),
         'cms-tab-stats': document.getElementById('cms-tab-stats'),
@@ -383,9 +772,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     });
-    // Standaard: Orders tab actief
+    // Standaard: Artikelen tab actief
     Object.keys(tabContents).forEach(key => {
-        tabContents[key].style.display = (key === 'cms-tab-orders') ? '' : 'none';
+        tabContents[key].style.display = (key === 'cms-tab-articles') ? '' : 'none';
     });
 
     // Password toggle buttons
@@ -432,6 +821,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 settingsStatus.className = 'cms-status cms-status-error';
             }
         });
+    }
+
+    const refreshTaxonomyBtn = document.getElementById('refresh-taxonomy-btn');
+    if (refreshTaxonomyBtn) {
+        refreshTaxonomyBtn.addEventListener('click', loadTaxonomies);
+    }
+    const addTaxonomyGroupBtn = document.getElementById('add-taxonomy-group-btn');
+    if (addTaxonomyGroupBtn) {
+        addTaxonomyGroupBtn.addEventListener('click', addTaxonomyGroup);
+    }
+    const addTaxonomyCategoryBtn = document.getElementById('add-taxonomy-category-btn');
+    if (addTaxonomyCategoryBtn) {
+        addTaxonomyCategoryBtn.addEventListener('click', addTaxonomyCategory);
+    }
+
+    const groupsContainer = document.getElementById('taxonomy-groups-container');
+    if (groupsContainer) {
+        groupsContainer.addEventListener('click', handleTaxonomyAction);
+        groupsContainer.addEventListener('change', handleTaxonomyAction);
+    }
+    const categoriesContainer = document.getElementById('taxonomy-categories-container');
+    if (categoriesContainer) {
+        categoriesContainer.addEventListener('click', handleTaxonomyAction);
     }
 
     if (saveSettingsBtn) {
@@ -514,6 +926,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadStats();
     loadArticles();
     loadProducts();
+    loadTaxonomies();
     loadHomepageSettings();
     loadOrders();
 });

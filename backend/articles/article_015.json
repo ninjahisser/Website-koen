@@ -12,15 +12,13 @@
       "mute": false
     },
     {
-      "type": "image",
-      "src": "/images/article_015_0.png",
-      "alt": "Parlement discussie"
-    },
-    {
       "type": "text",
       "content": "De jongeren van Malem wachten al meer dan tien jaar op een jeugdhuis. In het kader van EYC, kregen ze de kans op alle Gentse politieke kopstukken hierover te intervieuwen, met als gevolg oude en nieuwe beloftes"
     }
   ],
   "created_at": "2026-02-21T09:00:00",
-  "updated_at": "2026-03-31T11:54:38.474024"
+  "updated_at": "2026-04-06T23:23:16.943224",
+  "pinned": false,
+  "order_global": 6000,
+  "order_in_group": 1000
 }

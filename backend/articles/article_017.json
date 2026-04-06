@@ -1,6 +1,6 @@
 {
   "id": "article_017",
-  "title": "Fearless in Malem : eerste hoofrolspeler bekend !",
+  "title": "Fearless in Malem : eerste hoofdrolspeler bekend !",
   "category": "POLITIEK",
   "size": "groot",
   "components": [
@@ -11,16 +11,14 @@
       "mute": false
     },
     {
-      "type": "image",
-      "src": "/images/article_017_0.png",
-      "alt": "School in vergaderruimte"
-    },
-    {
       "type": "text",
-      "content": "Studio plant een niuewe en achtste verse van the fast and the furious, en we kunnen Umet gepaste trots de eerste hoofdrolspeelster aankondingen !"
+      "content": "Studio plant een nieuwe en achtste versie van The Fast and the Furious, en we kunnen u met gepaste trots de eerste hoofdrolspeelster aankondigen !"
     }
   ],
   "created_at": "2026-02-21T11:00:00",
-  "updated_at": "2026-03-31T11:17:56.894075",
-  "group": "standaard"
+  "updated_at": "2026-04-06T23:28:38.435743",
+  "group": "standaard",
+  "pinned": false,
+  "order_global": 4000,
+  "order_in_group": 3000
 }

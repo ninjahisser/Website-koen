@@ -2,6 +2,7 @@ class ArticleLoader {
     constructor(apiUrl = API_BASE_URL) {
         this.apiUrl = apiUrl;
         this.pendingStandaardArticles = [];
+        this.highlightedGroups = new Set(['het klein nieuws', 'de miniatuurwereld']);
     }
 
     async loadGroups() {
@@ -30,18 +31,97 @@ class ArticleLoader {
         }
     }
 
-    getFirstImage(article) {
-        if (article.components && article.components.length > 0) {
-            const imageComponent = article.components.find(c => c.type === 'image');
-            return imageComponent ? imageComponent.src : null;
+    getYouTubeVideoId(src) {
+        if (!src) return '';
+        try {
+            const url = new URL(src);
+            if (url.hostname.includes('youtube.com')) {
+                if (url.pathname === '/watch') {
+                    return url.searchParams.get('v') || '';
+                }
+                if (url.pathname.startsWith('/embed/')) {
+                    return url.pathname.replace('/embed/', '').split('/')[0];
+                }
+            }
+            if (url.hostname.includes('youtu.be')) {
+                return url.pathname.replace('/', '').split('/')[0];
+            }
+        } catch (error) {
+            return '';
+        }
+        return '';
+    }
+
+    getFirstComponentMedia(article, type) {
+        if (!article || !Array.isArray(article.components)) {
+            return null;
+        }
+        const component = article.components.find(c => c && c.type === type && c.src);
+        return component ? component.src : null;
+    }
+
+    getFirstMediaInOrder(article) {
+        if (!article || !Array.isArray(article.components)) {
+            return null;
+        }
+        const component = article.components.find(c => c && (c.type === 'image' || c.type === 'video') && c.src);
+        if (!component) {
+            return null;
+        }
+        return { type: component.type, src: component.src };
+    }
+
+    getArticleThumbnailMedia(article) {
+        const firstImage = this.getFirstComponentMedia(article, 'image');
+        const firstVideo = this.getFirstComponentMedia(article, 'video');
+        const firstInOrder = this.getFirstMediaInOrder(article);
+        const thumbnail = article && article.thumbnail ? article.thumbnail : null;
+
+        if (thumbnail && thumbnail.mode === 'auto-first' && firstInOrder) {
+            return firstInOrder;
+        }
+        if (thumbnail && thumbnail.mode === 'auto-video' && firstVideo) {
+            return { type: 'video', src: firstVideo };
+        }
+        if (thumbnail && thumbnail.mode === 'auto-image' && firstImage) {
+            return { type: 'image', src: firstImage };
+        }
+        if (thumbnail && (thumbnail.mode === 'custom-url' || thumbnail.mode === 'upload') && thumbnail.src) {
+            return { type: thumbnail.kind === 'video' ? 'video' : 'image', src: thumbnail.src };
+        }
+        if (firstInOrder) {
+            return firstInOrder;
         }
         return null;
+    }
+
+    getThumbnailImageUrl(article) {
+        const media = this.getArticleThumbnailMedia(article);
+        if (!media || !media.src) {
+            return null;
+        }
+        if (media.type === 'image') {
+            return media.src;
+        }
+        const ytId = this.getYouTubeVideoId(media.src);
+        if (ytId) {
+            return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+        }
+        return null;
+    }
+
+    normalizeArticleSize(size) {
+        const value = (size || '').toString().trim().toLowerCase();
+        if (value === 'teskt') {
+            return 'tekst';
+        }
+        return value;
     }
 
     findFirstArticleWithImage(groupsData) {
         const allArticles = Object.values(groupsData || {}).flat();
         for (const article of allArticles) {
-            if (this.getFirstImage(article)) {
+            if (this.getThumbnailImageUrl(article)) {
                 return article;
             }
         }
@@ -56,7 +136,7 @@ class ArticleLoader {
             return bTime - aTime;
         });
         for (const article of sorted) {
-            if (this.getFirstImage(article)) {
+            if (this.getThumbnailImageUrl(article)) {
                 return article;
             }
         }
@@ -66,7 +146,7 @@ class ArticleLoader {
     findFirstImageFromGroups(groupsData) {
         const allArticles = Object.values(groupsData || {}).flat();
         for (const article of allArticles) {
-            const image = this.getFirstImage(article);
+            const image = this.getThumbnailImageUrl(article);
             if (image) {
                 return image;
             }
@@ -77,9 +157,12 @@ class ArticleLoader {
     createGroupSection(groupName, articles) {
         const section = document.createElement('div');
         section.className = 'group-section';
-        const isLargeSize = (size) => size === 'groot' || size === 'tekst';
-        const isSmallSize = (size) => size === 'klein';
-        const isKleinStyleGroup = groupName === 'het klein nieuws' || groupName === 'de miniatuurwereld';
+        const isLargeSize = (size) => {
+            const normalized = this.normalizeArticleSize(size);
+            return normalized === 'groot' || normalized === 'tekst';
+        };
+        const isSmallSize = (size) => this.normalizeArticleSize(size) === 'klein';
+        const isKleinStyleGroup = this.highlightedGroups.has(groupName);
         if (isKleinStyleGroup) {
             section.className = 'klein-nieuws-section';
         }
@@ -106,12 +189,10 @@ class ArticleLoader {
 
             const largeQueue = sourceArticles.filter(article => isLargeSize(article.size));
             const smallQueue = sourceArticles.filter(article => isSmallSize(article.size));
-            let placeLargeLeft = true;
+            // 50/50 start side so small-stack is sometimes on the left
+            let placeLargeLeft = Math.random() >= 0.5;
 
             while (true) {
-                // Full rows only:
-                // 1) GROOT - KLEIN/KLEIN
-                // 2) KLEIN/KLEIN - GROOT
                 if (largeQueue.length > 0 && smallQueue.length >= 2) {
                     rows.push({
                         layout: placeLargeLeft ? 'large-left' : 'large-right',
@@ -122,7 +203,6 @@ class ArticleLoader {
                     continue;
                 }
 
-                // 3) KLEIN/KLEIN/KLEIN (stacked)
                 if (smallQueue.length >= 3) {
                     rows.push({
                         layout: 'small-stack-3',
@@ -142,7 +222,7 @@ class ArticleLoader {
                 if (row.layout === 'large-left' || row.layout === 'large-right') {
                     rowEl.classList.add('groot-row');
                     rowEl.style.display = 'grid';
-                    rowEl.style.gridTemplateColumns = '2fr 1fr';
+                    rowEl.style.gridTemplateColumns = row.layout === 'large-left' ? '2fr 1fr' : '1fr 2fr';
                     rowEl.style.gap = '20px';
 
                     const grootCard = this.createArticleCard(row.groot);
@@ -197,24 +277,19 @@ class ArticleLoader {
         }
 
         section.appendChild(container);
-        if (groupName === 'het klein nieuws') {
-            const footer = document.createElement('div');
-            footer.className = 'klein-nieuws-footer';
-            footer.innerHTML = '<button class="btn-blue-full">BEKIJK "HET KLEIN NIEUWS"</button>';
-            section.appendChild(footer);
-        }
         return section;
     }
 
 createArticleCard(article) {
     const card = document.createElement('div');
     card.className = 'article-card';
-    const imageUrl = this.getFirstImage(article);
+    const thumbnailMedia = this.getArticleThumbnailMedia(article);
     let categoryLabel = '';
     if (article.category && article.category.toLowerCase() !== 'standaard') {
         categoryLabel = `<div class="article-label">${article.category.toUpperCase()}</div>`;
     }
-    const isTextOnly = article.size === 'tekst';
+    const normalizedSize = this.normalizeArticleSize(article && article.size);
+    const isTextOnly = normalizedSize === 'tekst';
     const html = isTextOnly
         ? `
                 <div class="article-text-block">
@@ -223,11 +298,18 @@ createArticleCard(article) {
                 </div>
             `
         : `
-                <img src="${resolveMediaUrl(imageUrl) || 'https://via.placeholder.com/800x450'}" 
-                     alt="${article.title}" 
-                     class="article-image"
-                     loading="lazy"
-                     onerror="this.src='https://via.placeholder.com/800x450'">
+                ${(() => {
+                    if (thumbnailMedia && thumbnailMedia.type === 'video' && thumbnailMedia.src) {
+                        const ytId = this.getYouTubeVideoId(thumbnailMedia.src);
+                        if (ytId) {
+                            const poster = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+                            return `<div style="position: relative;"><img src="${poster}" alt="${article.title}" class="article-image" loading="lazy"><span style="position:absolute;right:12px;bottom:12px;background:rgba(0,0,0,0.65);color:#fff;padding:4px 8px;font-size:12px;border-radius:3px;">VIDEO</span></div>`;
+                        }
+                        return `<video class="article-image" muted loop autoplay playsinline preload="metadata"><source src="${resolveMediaUrl(thumbnailMedia.src)}"></video>`;
+                    }
+                    const imageUrl = thumbnailMedia && thumbnailMedia.src ? resolveMediaUrl(thumbnailMedia.src) : 'https://via.placeholder.com/800x450';
+                    return `<img src="${imageUrl}" alt="${article.title}" class="article-image" loading="lazy" onerror="this.src='https://via.placeholder.com/800x450'">`;
+                })()}
                 <div class="article-overlay">
                     ${categoryLabel}
                     <h3 class="article-title">${article.title}</h3>
@@ -356,6 +438,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const workshopTitle = document.getElementById('workshopTitle');
     const workshopText = document.getElementById('workshopText');
     const workshopButton = document.getElementById('workshopButton');
+    const navSubmenu = document.querySelector('.nav-submenu');
 
     try {
         const [groupsData, siteSettings, articlesData] = await Promise.all([
@@ -364,28 +447,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             fetch(`${API_BASE_URL}/articles`).then(res => res.ok ? res.json() : [])
         ]);
         loadingEl.style.display = 'none';
-
-        const groupNames = Object.keys(groupsData || {});
-        const shuffledGroups = groupNames
-            .map(name => ({ name, sort: Math.random() }))
-            .sort((a, b) => a.sort - b.sort)
-            .map(entry => entry.name);
-
-        // set hero image based on the latest article with an image across all articles
-        const heroArticle = loader.findLatestArticleWithImage({ all: articlesData || [] });
-        if (heroArticle) {
-            const heroSrc = loader.getFirstImage(heroArticle);
-            if (heroSrc && heroImage) {
-                heroImage.style.backgroundImage = `url('${resolveMediaUrl(heroSrc)}')`;
-            }
-            if (heroTitle) {
-                heroTitle.textContent = heroArticle.title || '';
-            }
-            if (heroLink) {
-                heroLink.href = heroArticle.id ? `/article/${heroArticle.id}` : '#';
-            }
-        }
-
 
         if (siteSettings) {
             if (newsletterTitle) newsletterTitle.textContent = siteSettings.newsletterTitle || '';
@@ -400,77 +461,317 @@ document.addEventListener('DOMContentLoaded', async () => {
                 workshopButton.textContent = siteSettings.workshopButtonText || '';
                 workshopButton.href = siteSettings.workshopButtonLink || '#';
             }
+            const configuredHighlights = Array.isArray(siteSettings.highlightedGroups)
+                ? siteSettings.highlightedGroups.filter(item => typeof item === 'string' && item.trim()).map(item => item.trim())
+                : [];
+            loader.highlightedGroups = new Set(configuredHighlights.length > 0 ? configuredHighlights : ['het klein nieuws', 'de miniatuurwereld']);
         }
 
         // Hide the side containers since we'll put everything in main content
         if (kleinContainer) kleinContainer.style.display = 'none';
         if (miniContainer) miniContainer.style.display = 'none';
 
-        // Get all article groups - include both ungrouped and 'standaard' group articles
-        const ungroupedArticles = (articlesData || []).filter(article => !article.group || article.group === 'standaard');
-        const kleinArticles = (groupsData['het klein nieuws'] || []).slice(0, 2);
-        const miniatuurArticles = (groupsData['de miniatuurwereld'] || []).slice(0, 4);
+        const getArticleCategory = (article) => (article && article.category ? String(article.category).trim() : '');
+        const buildCategoryList = (allArticles) => {
+            const categorySet = new Set();
+            (allArticles || []).forEach(article => {
+                const value = getArticleCategory(article);
+                if (value) {
+                    categorySet.add(value);
+                }
+            });
+            return Array.from(categorySet).sort((a, b) => a.localeCompare(b, 'nl', { sensitivity: 'base' }));
+        };
 
-        if (ungroupedArticles.length > 0) {
-            // Split articles into chunks and insert special sections randomly
-            const totalArticles = ungroupedArticles.length;
-            const sections = [];
-
-            // Determine random insertion points for special sections
-            const insertPoints = [];
-            if (kleinArticles.length > 0) {
-                // Insert after 30-70% of articles
-                insertPoints.push({
-                    position: Math.floor(totalArticles * (0.3 + Math.random() * 0.4)),
-                    section: loader.createGroupSection('het klein nieuws', kleinArticles)
-                });
+        const filterByCategory = (allArticles, selectedCategory) => {
+            const normalized = (selectedCategory || '').trim().toLowerCase();
+            if (!normalized) {
+                return (allArticles || []).slice();
             }
-            if (miniatuurArticles.length > 0) {
-                // Insert after 40-80% of articles
-                insertPoints.push({
-                    position: Math.floor(totalArticles * (0.4 + Math.random() * 0.4)),
-                    section: loader.createGroupSection('de miniatuurwereld', miniatuurArticles)
-                });
+            return (allArticles || []).filter(article => getArticleCategory(article).toLowerCase() === normalized);
+        };
+
+        const getArticleGroup = (article) => {
+            const value = article && article.group ? String(article.group).trim() : 'standaard';
+            return value || 'standaard';
+        };
+
+        const filterByGroup = (allArticles, selectedGroup) => {
+            const normalized = (selectedGroup || '').trim().toLowerCase();
+            if (!normalized) {
+                return (allArticles || []).slice();
+            }
+            return (allArticles || []).filter(article => getArticleGroup(article).toLowerCase() === normalized);
+        };
+
+        const urlParams = new URLSearchParams(window.location.search);
+        let activeCategory = (urlParams.get('categorie') || urlParams.get('category') || '').trim();
+        let activeGroup = (urlParams.get('group') || '').trim();
+        const knownGroups = ['standaard', ...Object.keys(groupsData || {})];
+        if (activeGroup) {
+            const matchedGroup = knownGroups.find(groupName => groupName.toLowerCase() === activeGroup.toLowerCase());
+            activeGroup = matchedGroup || '';
+        }
+
+        const syncFiltersInUrl = () => {
+            const url = new URL(window.location.href);
+            if (activeCategory) {
+                url.searchParams.set('categorie', activeCategory);
+            } else {
+                url.searchParams.delete('categorie');
+                url.searchParams.delete('category');
+            }
+            if (activeGroup) {
+                url.searchParams.set('group', activeGroup);
+            } else {
+                url.searchParams.delete('group');
+            }
+            const nextUrl = `${url.pathname}${url.search}${url.hash}`;
+            window.history.replaceState({}, '', nextUrl);
+        };
+
+        const renderCategoryNav = (categories) => {
+            if (!navSubmenu) {
+                return;
             }
 
-            // Sort insert points by position
-            insertPoints.sort((a, b) => a.position - b.position);
+            if (activeCategory) {
+                const matched = categories.find(category => category.toLowerCase() === activeCategory.toLowerCase());
+                activeCategory = matched || '';
+            }
 
-            // Build the content by inserting special sections at the right positions
-            let lastIndex = 0;
-            insertPoints.forEach(insertPoint => {
-                // Add articles up to this insertion point
-                if (insertPoint.position > lastIndex) {
-                    const articlesSlice = ungroupedArticles.slice(lastIndex, insertPoint.position);
-                    if (articlesSlice.length > 0) {
-                        const articleSection = loader.createGroupSection('standaard', articlesSlice);
-                        container.appendChild(articleSection);
+            navSubmenu.innerHTML = '';
+
+            const createButton = (label, value) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'nav-category-btn';
+                btn.dataset.category = value;
+                btn.textContent = label.toUpperCase();
+                if ((value || '') === (activeCategory || '')) {
+                    btn.classList.add('active');
+                }
+                btn.addEventListener('click', () => {
+                    activeCategory = value;
+                    activeGroup = '';
+                    renderHomepageByCategory(activeCategory, activeGroup);
+                    syncFiltersInUrl();
+                    Array.from(navSubmenu.querySelectorAll('.nav-category-btn')).forEach(item => {
+                        item.classList.toggle('active', item.dataset.category === activeCategory);
+                    });
+                });
+                navSubmenu.appendChild(btn);
+            };
+
+            createButton('Alles', '');
+            categories.forEach(category => createButton(category, category));
+        };
+
+        const getNewestTime = (list) => Math.max(...list.map(article => new Date(article.created_at || 0).getTime()));
+        const getMinGlobalOrder = (list) => {
+            const orders = (list || [])
+                .map(article => Number(article.order_global))
+                .filter(value => Number.isFinite(value) && value > 0);
+            return orders.length ? Math.min(...orders) : Number.MAX_SAFE_INTEGER;
+        };
+
+        const renderStandaardWithFlush = (baseArticles) => {
+            if (!baseArticles || baseArticles.length === 0) {
+                return;
+            }
+
+            container.appendChild(loader.createGroupSection('standaard', baseArticles));
+
+            if (loader.pendingStandaardArticles && loader.pendingStandaardArticles.length > 0) {
+                const pending = [...loader.pendingStandaardArticles];
+                loader.pendingStandaardArticles = [];
+                const flushSection = document.createElement('div');
+                flushSection.className = 'group-section';
+                const flushGrid = document.createElement('div');
+                flushGrid.className = 'standaard-grid';
+
+                let i = 0;
+                let placeLargeLeft = Math.random() >= 0.5;
+                while (i < pending.length) {
+                    if (i + 2 < pending.length) {
+                        const rowEl = document.createElement('div');
+                        rowEl.className = 'standaard-row groot-row';
+                        rowEl.style.display = 'grid';
+                        rowEl.style.gridTemplateColumns = placeLargeLeft ? '2fr 1fr' : '1fr 2fr';
+                        rowEl.style.gap = '20px';
+                        const grootCard = loader.createArticleCard(pending[i]);
+                        grootCard.classList.add('large-item');
+                        const smallStack = document.createElement('div');
+                        smallStack.className = 'small-stack';
+                        [pending[i + 1], pending[i + 2]].forEach(a => {
+                            const c = loader.createArticleCard(a);
+                            c.classList.add('small-item');
+                            smallStack.appendChild(c);
+                        });
+                        if (placeLargeLeft) {
+                            rowEl.appendChild(grootCard);
+                            rowEl.appendChild(smallStack);
+                        } else {
+                            rowEl.appendChild(smallStack);
+                            rowEl.appendChild(grootCard);
+                        }
+                        flushGrid.appendChild(rowEl);
+                        placeLargeLeft = !placeLargeLeft;
+                        i += 3;
+                    } else if (i + 1 < pending.length) {
+                        const rowEl = document.createElement('div');
+                        rowEl.className = 'standaard-row groot-row';
+                        rowEl.style.display = 'grid';
+                        rowEl.style.gridTemplateColumns = placeLargeLeft ? '2fr 1fr' : '1fr 2fr';
+                        rowEl.style.gap = '20px';
+                        const grootCard = loader.createArticleCard(pending[i]);
+                        grootCard.classList.add('large-item');
+                        const smallStack = document.createElement('div');
+                        smallStack.className = 'small-stack';
+                        smallStack.style.height = 'auto';
+                        const smallCard = loader.createArticleCard(pending[i + 1]);
+                        smallCard.classList.add('small-item');
+                        smallStack.appendChild(smallCard);
+                        if (placeLargeLeft) {
+                            rowEl.appendChild(grootCard);
+                            rowEl.appendChild(smallStack);
+                        } else {
+                            rowEl.appendChild(smallStack);
+                            rowEl.appendChild(grootCard);
+                        }
+                        flushGrid.appendChild(rowEl);
+                        placeLargeLeft = !placeLargeLeft;
+                        i += 2;
+                    } else {
+                        const rowEl = document.createElement('div');
+                        rowEl.className = 'standaard-row groot-row';
+                        rowEl.style.display = 'grid';
+                        rowEl.style.gridTemplateColumns = placeLargeLeft ? '2fr 1fr' : '1fr 2fr';
+                        rowEl.style.gap = '20px';
+                        rowEl.style.marginLeft = '0';
+                        rowEl.style.marginRight = '0';
+
+                        const card = loader.createArticleCard(pending[i]);
+                        card.classList.add('large-item');
+                        rowEl.appendChild(card);
+
+                        const spacer = document.createElement('div');
+                        spacer.className = 'small-stack';
+                        spacer.style.height = 'auto';
+                        if (placeLargeLeft) {
+                            rowEl.appendChild(spacer);
+                        } else {
+                            rowEl.insertBefore(spacer, card);
+                        }
+
+                        flushGrid.appendChild(rowEl);
+                        placeLargeLeft = !placeLargeLeft;
+                        i += 1;
                     }
                 }
-                // Add the special section
-                container.appendChild(insertPoint.section);
-                lastIndex = insertPoint.position;
-            });
 
-            // Add remaining articles after all insertions
-            if (lastIndex < totalArticles) {
-                const remainingArticles = ungroupedArticles.slice(lastIndex);
-                if (remainingArticles.length > 0) {
-                    const articleSection = loader.createGroupSection('standaard', remainingArticles);
-                    container.appendChild(articleSection);
+                flushSection.appendChild(flushGrid);
+                container.appendChild(flushSection);
+            }
+        };
+
+        const renderHomepageByCategory = (selectedCategory, selectedGroup = '') => {
+            container.innerHTML = '';
+            loader.pendingStandaardArticles = [];
+
+            const filteredArticles = filterByGroup(filterByCategory(articlesData || [], selectedCategory), selectedGroup);
+            let heroArticle = null;
+            for (const article of filteredArticles) {
+                if (loader.getThumbnailImageUrl(article)) {
+                    heroArticle = article;
+                    break;
                 }
             }
-        } else {
-            // No main articles, just show special sections
-            if (kleinArticles.length > 0) {
-                const kleinSection = loader.createGroupSection('het klein nieuws', kleinArticles);
-                container.appendChild(kleinSection);
+            if (!heroArticle) {
+                heroArticle = filteredArticles[0] || null;
             }
-            if (miniatuurArticles.length > 0) {
-                const miniSection = loader.createGroupSection('de miniatuurwereld', miniatuurArticles);
-                container.appendChild(miniSection);
+            const heroArticleId = heroArticle && heroArticle.id ? heroArticle.id : null;
+
+            if (heroTitle) {
+                heroTitle.textContent = heroArticle ? (heroArticle.title || '') : '';
             }
+            if (heroLink) {
+                heroLink.href = heroArticle && heroArticle.id ? `/article/${heroArticle.id}` : '#';
+            }
+            if (heroImage) {
+                const heroSrc = heroArticle ? loader.getThumbnailImageUrl(heroArticle) : null;
+                heroImage.style.backgroundImage = heroSrc ? `url('${resolveMediaUrl(heroSrc)}')` : 'none';
+            }
+
+            const isNotHero = article => !heroArticleId || article.id !== heroArticleId;
+            const filteredGroupsData = Object.fromEntries(
+                Object.entries(groupsData || {}).map(([groupName, groupArticles]) => [
+                    groupName,
+                    filterByGroup(filterByCategory(groupArticles || [], selectedCategory), selectedGroup)
+                ])
+            );
+
+            const standaardArticles = filteredArticles.filter(article => (!article.group || article.group === 'standaard') && isNotHero(article));
+            const dynamicGroupEntries = Object.entries(filteredGroupsData)
+                .filter(([groupName]) => groupName !== 'standaard')
+                .map(([groupName, groupArticles]) => ({ groupName, groupArticles: (groupArticles || []).filter(isNotHero) }))
+                .filter(entry => entry.groupArticles.length > 0);
+
+            const groupSections = [];
+            if (standaardArticles.length > 0) {
+                groupSections.push({
+                    type: 'standaard',
+                    name: 'standaard',
+                    articles: standaardArticles,
+                    newest: getNewestTime(standaardArticles),
+                    order: getMinGlobalOrder(standaardArticles)
+                });
+            }
+            dynamicGroupEntries.forEach(entry => {
+                groupSections.push({
+                    type: 'normal',
+                    name: entry.groupName,
+                    articles: entry.groupArticles,
+                    newest: getNewestTime(entry.groupArticles),
+                    order: getMinGlobalOrder(entry.groupArticles)
+                });
+            });
+
+            groupSections
+                .sort((a, b) => a.order - b.order)
+                .forEach(section => {
+                    if (section.type === 'standaard') {
+                        renderStandaardWithFlush(section.articles);
+                        return;
+                    }
+                    container.appendChild(loader.createGroupSection(section.name, section.articles));
+                });
+
+            if (groupSections.length === 0) {
+                container.innerHTML = '<div class="loading">Geen artikels in deze categorie.</div>';
+            }
+        };
+
+        if (container) {
+            container.addEventListener('click', (event) => {
+                const targetButton = event.target.closest('button[data-group-filter]');
+                if (!targetButton) {
+                    return;
+                }
+                const nextGroup = (targetButton.dataset.groupFilter || '').trim();
+                if (!nextGroup) {
+                    return;
+                }
+                activeGroup = nextGroup;
+                renderHomepageByCategory(activeCategory, activeGroup);
+                syncFiltersInUrl();
+            });
         }
+
+        const categories = buildCategoryList(articlesData || []);
+        renderCategoryNav(categories);
+        syncFiltersInUrl();
+        renderHomepageByCategory(activeCategory, activeGroup);
     } catch (error) {
         loadingEl.style.display = 'none';
         errorEl.style.display = 'block';

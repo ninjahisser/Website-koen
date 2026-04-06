@@ -11,16 +11,14 @@
       "mute": false
     },
     {
-      "type": "image",
-      "src": "/images/article_001_0.png",
-      "alt": "Belgium politiek"
-    },
-    {
       "type": "text",
       "content": "De jongeren van Malem wachten al meer dan tien jaar op een jeugdhuis. In het kader van EYC, kregen ze de kans op alle Gentse politieke kopstukken hierover te intervieuwen, met als gevolg oude en nieuwe beloftes"
     }
   ],
   "created_at": "2026-02-20T10:00:00",
-  "updated_at": "2026-03-31T11:57:01.592077",
-  "group": "standaard"
+  "updated_at": "2026-04-06T23:23:16.943224",
+  "group": "standaard",
+  "pinned": false,
+  "order_global": 7000,
+  "order_in_group": 5000
 }

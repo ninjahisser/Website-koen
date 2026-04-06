@@ -13,18 +13,16 @@
     },
     {
       "type": "text",
-      "content": "Veeerle Baetens stelt zich kandidaat voor actiescenes voor Fearless in Malem. Ze speelt liever niet tevel samen met Johhny Depp, en we regelen dat meteen."
+      "content": "Veerle Baetens stelt zich kandidaat voor actiescenes voor Fearless in Malem. Ze speelt liever niet te veel samen met Johnny Depp, en we regelen dat meteen."
     },
     {
       "type": "text",
-      "content": "In een beweging brengen we2pac tot leven en de opnames gaan snel kunnen beginnen, op einde meteen een eerste voorproefje"
-    },
-    {
-      "type": "image",
-      "src": "/images/article_018_0.png",
-      "alt": ""
+      "content": "In een beweging brengen we 2Pac tot leven en de opnames kunnen snel beginnen, op het einde meteen een eerste voorproefje"
     }
   ],
   "created_at": "2026-02-23T10:00:00",
-  "updated_at": "2026-03-31T11:15:35.671389"
+  "updated_at": "2026-04-06T23:28:38.435743",
+  "pinned": false,
+  "order_global": 3000,
+  "order_in_group": 2000
 }

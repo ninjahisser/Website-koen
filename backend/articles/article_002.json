@@ -11,16 +11,14 @@
       "mute": false
     },
     {
-      "type": "image",
-      "src": "/images/article_002_0.png",
-      "alt": "Halfvastenfoor attracties"
-    },
-    {
       "type": "text",
       "content": "We zijn volop bezig onze eigen cinema te maken, hier de eerste beelden met een van onze absolute steractrices van de voorbije jaren"
     }
   ],
   "created_at": "2026-02-18T14:30:00",
   "updated_at": "2026-03-31T12:01:05.202390",
-  "group": "het klein nieuws"
+  "group": "het klein nieuws",
+  "pinned": false,
+  "order_global": 9000,
+  "order_in_group": 2000
 }

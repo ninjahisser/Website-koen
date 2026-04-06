@@ -20,5 +20,8 @@
   ],
   "created_at": "2026-02-12T12:15:00",
   "updated_at": "2026-03-02T22:40:38.616520",
-  "group": "standaard"
+  "group": "standaard",
+  "pinned": false,
+  "order_global": 17000,
+  "order_in_group": 13000
 }

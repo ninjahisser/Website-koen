@@ -103,6 +103,10 @@
         .cms-input-group .cms-toggle-pw-btn:hover {
             background-color: rgba(0,0,0,0.1);
         }
+
+        .cms-page .content-wrapper {
+            max-width: 1200px;
+        }
     </style>
 </head>
 <body class="cms-page">
@@ -117,13 +121,15 @@
     <div class="content-wrapper">
         <h1 class="cms-title">CMS beheer</h1>
         <div class="cms-tabs">
-            <button class="cms-tab-btn active" data-tab="cms-tab-orders">Bestellingen</button>
-            <button class="cms-tab-btn" data-tab="cms-tab-products">Shop-producten</button>
-            <button class="cms-tab-btn" data-tab="cms-tab-stats">Statistieken</button>
+            <button class="cms-tab-btn active" data-tab="cms-tab-articles">Artikelen</button>
+            <button class="cms-tab-btn" data-tab="cms-tab-taxonomy">Groups & categorieen</button>
             <button class="cms-tab-btn" data-tab="cms-tab-homepage">Homepage</button>
+            <button class="cms-tab-btn" data-tab="cms-tab-stats">Statistieken</button>
+            <button class="cms-tab-btn" data-tab="cms-tab-products">Shop</button>
+            <button class="cms-tab-btn" data-tab="cms-tab-orders">Bestellingen</button>
             <button class="cms-tab-btn" data-tab="cms-tab-content">Instellingen</button>
         </div>
-        <div id="cms-tab-orders" class="cms-tab-content">
+        <div id="cms-tab-orders" class="cms-tab-content" style="display:none;">
             <section id="cms-orders" class="cms-section">
                 <div class="cms-section-header">
                     <h2>Bestellingen</h2>
@@ -145,6 +151,60 @@
                     <button id="add-product-btn" class="cms-button">Nieuw product toevoegen</button>
                 </div>
                 <div id="products-container"></div>
+            </section>
+        </div>
+        <div id="cms-tab-taxonomy" class="cms-tab-content" style="display:none;">
+            <section id="cms-taxonomy" class="cms-section">
+                <div class="cms-section-header">
+                    <div>
+                        <h2>Groups en categorieen</h2>
+                        <p class="cms-section-note">Voeg groepen en categorieen toe, verwijder ze, en markeer groepen als highlighted voor de groene blok-stijl.</p>
+                    </div>
+                    <button id="refresh-taxonomy-btn" class="cms-button">Vernieuwen</button>
+                </div>
+
+                <div class="cms-form-row">
+                    <label for="new-taxonomy-group">Nieuwe group</label>
+                    <div class="cms-card-actions">
+                        <input id="new-taxonomy-group" type="text" class="cms-input" placeholder="bv. cultuur spotlight">
+                        <button id="add-taxonomy-group-btn" class="cms-button" type="button">Group toevoegen</button>
+                    </div>
+                </div>
+
+                <div class="cms-form-row">
+                    <label for="new-taxonomy-category">Nieuwe categorie</label>
+                    <div class="cms-card-actions">
+                        <input id="new-taxonomy-category" type="text" class="cms-input" placeholder="bv. interview">
+                        <button id="add-taxonomy-category-btn" class="cms-button" type="button">Categorie toevoegen</button>
+                    </div>
+                </div>
+
+                <div id="taxonomy-status" class="cms-status"></div>
+
+                <div class="cms-grid two-col" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+                    <div class="cms-article-card">
+                        <h3>Groups</h3>
+                        <div id="taxonomy-groups-container"></div>
+                    </div>
+                    <div class="cms-article-card">
+                        <h3>Categorieen</h3>
+                        <div id="taxonomy-categories-container"></div>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <div id="cms-tab-articles" class="cms-tab-content">
+            <section id="cms-articles" class="cms-section">
+                <div class="cms-section-header">
+                    <div>
+                        <h2>Artikelen</h2>
+                        <p class="cms-section-note">Beheer en publiceer artikelen voor de website.</p>
+                    </div>
+                    <div class="cms-card-actions">
+                        <button id="add-article-btn" class="cms-button">Nieuw artikel toevoegen</button>
+                    </div>
+                </div>
+                <div id="articles-container"></div>
             </section>
         </div>
         <div id="cms-tab-content" class="cms-tab-content" style="display:none;">

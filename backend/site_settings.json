@@ -6,5 +6,11 @@
   "workshopTitle": "Test dit is aanpasbaar",
   "workshopText": "(AANPASBAAR= Ik neem de allergrootste jaren workshops in SMAAK, designmuseum, scholen en veel meer!",
   "workshopButtonText": "IK WIL MEER WETEN",
-  "workshopButtonLink": "#"
+  "workshopButtonLink": "#",
+  "customGroups": [],
+  "customCategories": [],
+  "highlightedGroups": [
+    "de miniatuurwereld",
+    "het klein nieuws"
+  ]
 }

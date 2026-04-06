@@ -139,8 +139,9 @@ def save_views(views):
 def load_site_settings():
     if os.path.exists(SETTINGS_FILE):
         with open(SETTINGS_FILE, 'r', encoding='utf-8') as file:
-            return json.load(file)
-    return {
+            data = json.load(file)
+    else:
+        data = {
         'newsletterTitle': 'GEEN WERK MEER MISSEN?',
         'newsletterText': 'MELD JE AAN OF DE NIEUWSBRIEF',
         'newsletterButtonText': 'JA IK WIL DE NIEUWSBRIEF',
@@ -150,6 +151,10 @@ def load_site_settings():
         'workshopButtonText': 'IK WIL MEER WETEN',
         'workshopButtonLink': '#'
     }
+    data.setdefault('customGroups', [])
+    data.setdefault('customCategories', [])
+    data.setdefault('highlightedGroups', ['het klein nieuws', 'de miniatuurwereld'])
+    return data
 
 
 def save_site_settings(settings):
@@ -288,7 +293,8 @@ def create_article():
         category=data.get('category'),
         group=data.get('group'),
         components=data.get('components', []),
-        size=data.get('size', 'klein')
+        size=data.get('size', 'klein'),
+        thumbnail=data.get('thumbnail')
     )
     return jsonify(article), 201
 
@@ -298,7 +304,7 @@ def get_article(article_id):
     filepath = os.path.join(ARTICLES_DIR, f'{article_id}.json')
     if os.path.exists(filepath):
         try:
-            with open(filepath, 'r', encoding='utf-8') as file:
+            with open(filepath, 'r', encoding='utf-8-sig') as file:
                 return jsonify(json.load(file))
         except Exception as error:
             return jsonify({'error': str(error)}), 500
@@ -316,6 +322,33 @@ def update_article(article_id):
 def delete_article(article_id):
     ok = article_manager.delete_article(article_id)
     return jsonify({'success': ok})
+
+
+@app.route('/api/articles/reorder', methods=['POST'])
+def reorder_articles():
+    data = parse_json_body()
+    article_ids = data.get('article_ids', [])
+    group_name = data.get('group')
+
+    if not isinstance(article_ids, list) or len(article_ids) == 0:
+        return jsonify({'error': 'article_ids moet een niet-lege lijst zijn.'}), 400
+
+    changed = article_manager.reorder_articles(article_ids, group_name=group_name)
+    return jsonify({'success': True, 'updated': changed})
+
+
+@app.route('/api/articles/reorder/reset', methods=['POST'])
+def reset_article_order():
+    changed = article_manager.reset_article_order()
+    return jsonify({'success': True, 'updated': changed})
+
+
+@app.route('/api/articles/<article_id>/reorder/reset', methods=['POST'])
+def reset_single_article_order(article_id):
+    changed = article_manager.reset_single_article_order(article_id)
+    if changed is None:
+        return jsonify({'error': 'Artikel niet gevonden.'}), 404
+    return jsonify({'success': True, 'updated': changed})
 
 
 @app.route('/api/articles/<article_id>/view', methods=['POST'])
@@ -371,13 +404,163 @@ def get_stats():
 
 @app.route('/api/groups', methods=['GET'])
 def get_groups():
+    def created_ts(value):
+        try:
+            return datetime.fromisoformat(value or '').timestamp()
+        except Exception:
+            return 0
+
     groups = {}
     for article in article_manager.get_all_articles():
         group_name = article.get('group')
         if not group_name:
             continue
         groups.setdefault(group_name, []).append(article)
+    for group_name, items in groups.items():
+        groups[group_name] = sorted(
+            items,
+            key=lambda item: (
+                item.get('order_in_group', 10**9),
+                -created_ts(item.get('created_at'))
+            )
+        )
     return jsonify(groups)
+
+
+@app.route('/api/taxonomies', methods=['GET'])
+def get_taxonomies():
+    settings = load_site_settings()
+    group_usage = article_manager.get_group_usage()
+    category_usage = article_manager.get_category_usage()
+
+    custom_groups = [str(item).strip() for item in settings.get('customGroups', []) if str(item).strip()]
+    custom_categories = [str(item).strip() for item in settings.get('customCategories', []) if str(item).strip()]
+    highlighted = [str(item).strip() for item in settings.get('highlightedGroups', []) if str(item).strip()]
+
+    group_names = set(group_usage.keys()) | set(custom_groups)
+    if 'standaard' not in group_names:
+        group_names.add('standaard')
+
+    category_names = set(category_usage.keys()) | set(custom_categories)
+
+    groups = []
+    for name in sorted(group_names):
+        groups.append({
+            'name': name,
+            'count': group_usage.get(name, 0),
+            'custom': name in custom_groups,
+            'highlighted': name in highlighted
+        })
+
+    categories = []
+    for name in sorted(category_names):
+        categories.append({
+            'name': name,
+            'count': category_usage.get(name, 0),
+            'custom': name in custom_categories
+        })
+
+    return jsonify({
+        'groups': groups,
+        'categories': categories
+    })
+
+
+@app.route('/api/taxonomies/groups', methods=['POST'])
+def create_taxonomy_group():
+    data = parse_json_body()
+    name = (data.get('name') or '').strip()
+    if not name:
+        return jsonify({'error': 'Group naam is verplicht.'}), 400
+
+    settings = load_site_settings()
+    custom_groups = [str(item).strip() for item in settings.get('customGroups', []) if str(item).strip()]
+    if name not in custom_groups:
+        custom_groups.append(name)
+        settings['customGroups'] = sorted(set(custom_groups))
+        save_site_settings(settings)
+
+    return jsonify({'success': True, 'name': name})
+
+
+@app.route('/api/taxonomies/groups/<path:group_name>', methods=['PATCH'])
+def patch_taxonomy_group(group_name):
+    data = parse_json_body()
+    name = (group_name or '').strip()
+    if not name:
+        return jsonify({'error': 'Group naam ontbreekt.'}), 400
+
+    settings = load_site_settings()
+    highlighted = [str(item).strip() for item in settings.get('highlightedGroups', []) if str(item).strip()]
+    should_highlight = bool(data.get('highlighted'))
+
+    if should_highlight and name not in highlighted:
+        highlighted.append(name)
+    if not should_highlight and name in highlighted:
+        highlighted = [item for item in highlighted if item != name]
+
+    settings['highlightedGroups'] = sorted(set(highlighted))
+    save_site_settings(settings)
+    return jsonify({'success': True, 'name': name, 'highlighted': should_highlight})
+
+
+@app.route('/api/taxonomies/groups/<path:group_name>', methods=['DELETE'])
+def delete_taxonomy_group(group_name):
+    name = (group_name or '').strip()
+    if not name:
+        return jsonify({'error': 'Group naam ontbreekt.'}), 400
+    if name == 'standaard':
+        return jsonify({'error': 'De groep standaard kan niet verwijderd worden.'}), 400
+
+    changed = article_manager.reassign_group(name, 'standaard')
+
+    settings = load_site_settings()
+    settings['customGroups'] = [
+        str(item).strip() for item in settings.get('customGroups', [])
+        if str(item).strip() and str(item).strip() != name
+    ]
+    settings['highlightedGroups'] = [
+        str(item).strip() for item in settings.get('highlightedGroups', [])
+        if str(item).strip() and str(item).strip() != name
+    ]
+    save_site_settings(settings)
+
+    return jsonify({'success': True, 'name': name, 'reassignedArticles': changed})
+
+
+@app.route('/api/taxonomies/categories', methods=['POST'])
+def create_taxonomy_category():
+    data = parse_json_body()
+    name = (data.get('name') or '').strip()
+    if not name:
+        return jsonify({'error': 'Categorie naam is verplicht.'}), 400
+
+    settings = load_site_settings()
+    custom_categories = [str(item).strip() for item in settings.get('customCategories', []) if str(item).strip()]
+    if name not in custom_categories:
+        custom_categories.append(name)
+        settings['customCategories'] = sorted(set(custom_categories))
+        save_site_settings(settings)
+
+    return jsonify({'success': True, 'name': name})
+
+
+@app.route('/api/taxonomies/categories/<path:category_name>', methods=['DELETE'])
+def delete_taxonomy_category(category_name):
+    name = (category_name or '').strip()
+    if not name:
+        return jsonify({'error': 'Categorie naam ontbreekt.'}), 400
+
+    changed = article_manager.clear_category(name)
+
+    settings = load_site_settings()
+    settings['customCategories'] = [
+        str(item).strip() for item in settings.get('customCategories', [])
+        if str(item).strip() and str(item).strip() != name
+    ]
+    save_site_settings(settings)
+
+    return jsonify({'success': True, 'name': name, 'updatedArticles': changed})
 
 
 @app.route('/api/site', methods=['GET'])

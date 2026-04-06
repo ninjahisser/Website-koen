@@ -3,6 +3,7 @@
 const loadingEl = document.getElementById('article-loading');
 const errorEl = document.getElementById('article-error');
 const contentEl = document.getElementById('article-content');
+const navSubmenuEl = document.querySelector('.nav-submenu');
 
 function getArticleId() {
     const pathMatch = window.location.pathname.match(/\/article\/([^/]+)$/);
@@ -75,6 +76,63 @@ function formatDate(value) {
     });
 }
 
+function getCategoryValue(article) {
+    return (article && article.category ? String(article.category) : '').trim();
+}
+
+function buildCategoryHeader(categories, activeCategory = '') {
+    if (!navSubmenuEl) return;
+
+    navSubmenuEl.innerHTML = '';
+    const normalizedActive = (activeCategory || '').trim().toLowerCase();
+
+    const createButton = (label, value) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'nav-category-btn';
+        btn.dataset.category = value;
+        btn.textContent = label.toUpperCase();
+
+        if ((value || '').trim().toLowerCase() === normalizedActive) {
+            btn.classList.add('active');
+        }
+
+        btn.addEventListener('click', () => {
+            if (!value) {
+                window.location.href = '/';
+                return;
+            }
+            window.location.href = `/?categorie=${encodeURIComponent(value)}`;
+        });
+
+        navSubmenuEl.appendChild(btn);
+    };
+
+    createButton('Alles', '');
+    categories.forEach(category => createButton(category, category));
+}
+
+async function loadHeaderCategories(activeCategory = '') {
+    try {
+        const res = await fetch(`${API_BASE_URL}/articles`);
+        if (!res.ok) {
+            throw new Error('Kon categorieen niet laden');
+        }
+        const articles = await res.json();
+        const categorySet = new Set();
+        (articles || []).forEach(article => {
+            const value = getCategoryValue(article);
+            if (value) {
+                categorySet.add(value);
+            }
+        });
+        const categories = Array.from(categorySet).sort((a, b) => a.localeCompare(b, 'nl', { sensitivity: 'base' }));
+        buildCategoryHeader(categories, activeCategory);
+    } catch (error) {
+        buildCategoryHeader([], activeCategory);
+    }
+}
+
 async function loadArticle() {
     const articleId = getArticleId();
     if (!articleId) {
@@ -90,6 +148,7 @@ async function loadArticle() {
             throw new Error('Artikel niet gevonden');
         }
         const article = await res.json();
+        await loadHeaderCategories(getCategoryValue(article));
         const dateText = formatDate(article.created_at);
 
         contentEl.innerHTML = `

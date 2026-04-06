@@ -11,16 +11,14 @@
       "mute": false
     },
     {
-      "type": "image",
-      "src": "/images/article_003_0.png",
-      "alt": "Vakantiebestemming binnenland"
-    },
-    {
       "type": "text",
       "content": "De voetballertjes en de voetbalbonden zijn bang voor … een gele kaart en zwichten voor de zoveelste keer voor de FIFA. Dit moet zowat het meest beschamende WK ooit zijn, we kunnen de wansmakelijkheid amper nog aanzien en stoppen tot nader order met de verslaggeving, en geven de titel graag aan de fantastische reporters van Studio Malem ."
     }
   ],
   "created_at": "2026-02-15T09:15:00",
   "updated_at": "2026-03-31T12:12:19.230893",
-  "group": "standaard"
+  "group": "standaard",
+  "pinned": false,
+  "order_global": 14000,
+  "order_in_group": 11000
 }

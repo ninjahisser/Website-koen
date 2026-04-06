@@ -5,40 +5,287 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CMS - Artikel aanpassen</title>
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .cms-navbar {
+            background-color: #2d5f4f;
+            display: flex;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .cms-navbar-inner {
+            width: 100%;
+            max-width: 1400px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 30px;
+            flex-wrap: wrap;
+        }
+
+        .cms-logo {
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            text-decoration: none;
+            margin-right: auto;
+        }
+
+        .cms-nav-btn {
+            padding: 8px 14px;
+            background-color: #1a3a2e;
+            color: white;
+            text-decoration: none;
+            border: 1px solid #4a8b78;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .cms-nav-btn:hover {
+            background-color: #4a8b78;
+            border-color: #6ab399;
+        }
+
+        .cms-logout-btn {
+            background-color: #c74a2e;
+            border-color: #e67350;
+        }
+
+        .cms-logout-btn:hover {
+            background-color: #e67350;
+            border-color: #f0a08a;
+        }
+
+        .cms-edit-page .navbar {
+            display: none;
+        }
+
+        .cms-edit-page .content-wrapper {
+            max-width: 980px;
+            background: transparent;
+            border: none;
+            padding-top: 20px;
+            padding-bottom: 20px;
+        }
+
+        .cms-edit-page .cms-form {
+            border: 1px solid #e8ecea;
+            border-radius: 8px;
+            padding: 20px;
+            background: #fff;
+        }
+
+        .cms-edit-page .cms-form-row {
+            border: none;
+            padding: 0;
+            background: transparent;
+            margin-bottom: 18px;
+        }
+
+        .cms-edit-page .cms-form-row > label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 6px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #4e6660;
+            font-weight: 700;
+        }
+
+        .cms-field-help {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            border-radius: 999px;
+            border: 1px solid #86a99d;
+            color: #2d5f4f;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1;
+            cursor: help;
+            background: #eef5f2;
+            text-transform: none;
+        }
+
+        .cms-field-help::after {
+            content: attr(data-help);
+            position: absolute;
+            left: 0;
+            top: calc(100% + 8px);
+            min-width: 220px;
+            max-width: 320px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            background: #1f3930;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: normal;
+            line-height: 1.35;
+            text-transform: none;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(2px);
+            transition: opacity 120ms ease, transform 120ms ease;
+            z-index: 30;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+        }
+
+        .cms-field-help:hover::after,
+        .cms-field-help:focus-visible::after {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .cms-edit-page .cms-input,
+        .cms-edit-page .cms-textarea,
+        .cms-edit-page select {
+            border: 1px solid #b8c9c2;
+            background: #fff;
+            border-radius: 4px;
+        }
+
+        .cms-edit-page .components-editor,
+        .cms-edit-page .components-list {
+            border: 1px solid #e2e8e5;
+            border-radius: 8px;
+            background: #fcfdfd;
+            padding: 12px;
+        }
+
+        .cms-edit-page .components-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .cms-edit-page .components-toolbar .cms-button {
+            background: #eaf1ee;
+            color: #264a3e;
+            border: 1px solid #c9d8d2;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 7px 12px;
+        }
+
+        .cms-edit-page .components-toolbar .cms-button:hover {
+            background: #dce9e3;
+            border-color: #b6cbc2;
+        }
+
+        .cms-edit-page .component-row {
+            border: 2px solid #111;
+            border-radius: 6px;
+            background: #fff;
+            padding: 10px;
+            margin-bottom: 10px;
+            transition: transform 180ms ease;
+        }
+
+        .cms-edit-page #thumbnail-preview {
+            border: 1px solid #e2e8e5;
+            border-radius: 6px;
+            padding: 8px;
+            background: #fcfdfd;
+            min-height: 100px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .cms-edit-page .thumb-preview-media {
+            width: 160px;
+            height: 96px;
+            object-fit: cover;
+            border: 1px solid #aebfb8;
+            border-radius: 4px;
+            display: block;
+        }
+
+        .cms-edit-page .thumb-preview-caption {
+            margin: 6px 0 0;
+            font-size: 12px;
+            color: #35584b;
+            font-weight: 600;
+        }
+
+        .cms-edit-page .thumb-preview-note {
+            margin: 0;
+            color: #48665b;
+            font-size: 12px;
+        }
+
+        .cms-toast {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            z-index: 3000;
+            min-width: 220px;
+            max-width: 340px;
+            padding: 10px 14px;
+            border-radius: 6px;
+            border: 1px solid #c9d8d2;
+            background: #f2f7f5;
+            color: #24463b;
+            font-size: 13px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+            opacity: 0;
+            transform: translateY(-6px);
+            transition: opacity 180ms ease, transform 180ms ease;
+            pointer-events: none;
+        }
+
+        .cms-toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .cms-toast.error {
+            border-color: #e3b9b9;
+            background: #fff1f1;
+            color: #7d2a2a;
+        }
+    </style>
 </head>
-<body class="cms-page">
-    <nav class="navbar">
-        <div class="navbar-container">
-            <div class="nav-top-bar">
-                <a href="/" class="logo" style="text-decoration: none; color: inherit;">HVLN CMS</a>
-                <ul class="nav-menu">
-                    <li><a href="/cms" class="nav-link">Dashboard</a></li>
-                    <li><a href="/cms-create" class="nav-link">Nieuw artikel</a></li>
-                    <li><a href="/cms-product-create" class="nav-link">Nieuw product</a></li>
-                </ul>
-            </div>
+<body class="cms-page cms-edit-page">
+    <div class="cms-navbar">
+        <div class="cms-navbar-inner">
+            <a href="/" class="cms-logo">Studio Malem CMS</a>
+            <a href="/cms" class="cms-nav-btn">← Terug naar CMS</a>
+            <a href="/cms-create" class="cms-nav-btn">Nieuw artikel</a>
+            <a href="/shop" class="cms-nav-btn">Naar shop</a>
+            <button id="logout-btn" class="cms-nav-btn cms-logout-btn">Uitloggen</button>
         </div>
-    </nav>
+    </div>
 
     <div class="content-wrapper">
         <h1 class="cms-title">Artikel aanpassen</h1>
         <div id="edit-status" class="cms-status"></div>
         <form id="edit-form" class="cms-form">
             <div class="cms-form-row">
-                <label for="title">Titel</label>
+                <label for="title">Titel <span class="cms-field-help" tabindex="0" data-help="De hoofdtitel van het artikel zoals die op de website verschijnt.">?</span></label>
                 <input id="title" name="title" type="text" class="cms-input" required>
             </div>
             <div class="cms-form-row">
-                <label for="category">Categorie</label>
-                <input id="category" name="category" type="text" class="cms-input">
+                <label for="category">Categorie <span class="cms-field-help" tabindex="0" data-help="Kies een bestaande categorie of maak een nieuwe categorie aan.">?</span></label>
+                <select id="category" name="category" class="cms-input"></select>
+                <input id="new-category" name="new-category" type="text" class="cms-input cms-input-muted" placeholder="Nieuwe categorie naam" style="display: none; margin-top: 8px;">
             </div>
             <div class="cms-form-row">
-                <label for="group">Group</label>
+                <label for="group">Group <span class="cms-field-help" tabindex="0" data-help="Groep bepaalt in welk blok op de homepage het artikel terechtkomt.">?</span></label>
                 <select id="group" name="group" class="cms-input"></select>
                 <input id="new-group" name="new-group" type="text" class="cms-input cms-input-muted" placeholder="Nieuwe groep naam" style="display: none;">
             </div>
             <div class="cms-form-row">
-                <label for="size">Size</label>
+                <label for="size">Size <span class="cms-field-help" tabindex="0" data-help="klein: rechterkolom, groot: hoofdelement, tekst: tekstkaart zonder media.">?</span></label>
                 <select id="size" name="size" class="cms-input">
                     <option value="klein">klein</option>
                     <option value="groot">groot</option>
@@ -46,7 +293,37 @@
                 </select>
             </div>
             <div class="cms-form-row">
-                <label>Components</label>
+                <label for="thumbnail-mode">Thumbnail <span class="cms-field-help" tabindex="0" data-help="Bepaalt welke afbeelding/video als preview gebruikt wordt op kaarten en lijsten.">?</span></label>
+                <select id="thumbnail-mode" class="cms-input">
+                    <option value="auto-first" selected>Automatisch: eerste element (foto of video)</option>
+                    <option value="auto-image">Automatisch: eerste afbeelding</option>
+                    <option value="auto-video">Automatisch: eerste video</option>
+                    <option value="custom-url">Aangepaste URL</option>
+                    <option value="upload">Aparte thumbnail uploaden</option>
+                </select>
+            </div>
+            <div class="cms-form-row" id="thumbnail-kind-row" style="display:none;">
+                <label for="thumbnail-kind">Thumbnail type <span class="cms-field-help" tabindex="0" data-help="Kies of de thumbnail een afbeelding of video is.">?</span></label>
+                <select id="thumbnail-kind" class="cms-input">
+                    <option value="image">Afbeelding</option>
+                    <option value="video">Video</option>
+                </select>
+            </div>
+            <div class="cms-form-row" id="thumbnail-url-row" style="display:none;">
+                <label for="thumbnail-url">Thumbnail URL <span class="cms-field-help" tabindex="0" data-help="Plak hier een directe link naar de thumbnail-media.">?</span></label>
+                <input id="thumbnail-url" type="text" class="cms-input" placeholder="https://...">
+            </div>
+            <div class="cms-form-row" id="thumbnail-upload-row" style="display:none;">
+                <label for="thumbnail-upload">Thumbnail bestand uploaden <span class="cms-field-help" tabindex="0" data-help="Upload een aparte thumbnail die los staat van de artikelcomponenten.">?</span></label>
+                <input id="thumbnail-upload" type="file" class="cms-input" accept="image/*,video/*">
+                <div id="thumbnail-upload-status" style="margin-top: 8px; font-size: 12px; color: #666;"></div>
+            </div>
+            <div class="cms-form-row">
+                <label>Thumbnail preview <span class="cms-field-help" tabindex="0" data-help="Hier zie je live welke thumbnail momenteel actief is.">?</span></label>
+                <div id="thumbnail-preview" style="width: 100%;"></div>
+            </div>
+            <div class="cms-form-row">
+                <label>Components <span class="cms-field-help" tabindex="0" data-help="Voeg tekst, afbeeldingen, video of audio toe. De volgorde bepaalt hoe het artikel wordt opgebouwd.">?</span></label>
                 <div class="components-editor">
                     <div class="components-toolbar">
                         <button type="button" class="cms-button cms-button-secondary" data-add="text">Tekst</button>
