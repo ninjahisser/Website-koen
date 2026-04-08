@@ -338,11 +338,88 @@ function escapeHtml(value) {
         .replace(/'/g, '&#039;');
 }
 
+let footerSocialLinksState = [];
+
+function normalizeSocialLink(rawValue) {
+    const value = String(rawValue || '').trim();
+    if (!value) {
+        return '#';
+    }
+    if (/^#+https?:\/\//i.test(value)) {
+        return value.replace(/^#+/, '');
+    }
+    if (/^(https?:\/\/|mailto:|tel:|\/|#)/i.test(value)) {
+        return value;
+    }
+    return `https://${value}`;
+}
+
+function renderSocialLinksList() {
+    const listEl = document.getElementById('social-links-list');
+    if (!listEl) return;
+
+    if (!Array.isArray(footerSocialLinksState) || footerSocialLinksState.length === 0) {
+        listEl.innerHTML = '<p class="cms-taxonomy-empty">Nog geen social links toegevoegd.</p>';
+        return;
+    }
+
+    const lastIndex = footerSocialLinksState.length - 1;
+    listEl.innerHTML = footerSocialLinksState.map((item, index) => `
+        <div class="cms-social-item" data-social-index="${index}">
+            <div class="cms-social-order-btns">
+                <button type="button" class="cms-button cms-button-small" data-social-move="up" data-social-index="${index}" ${index === 0 ? 'disabled' : ''} title="Omhoog">↑</button>
+                <button type="button" class="cms-button cms-button-small" data-social-move="down" data-social-index="${index}" ${index === lastIndex ? 'disabled' : ''} title="Omlaag">↓</button>
+            </div>
+            <div class="cms-social-item-fields" data-social-index="${index}">
+                <input type="text" class="cms-input cms-social-label-input" value="${escapeHtml(item.label)}" data-social-field="label" data-social-index="${index}" placeholder="Platform">
+                <input type="text" class="cms-input cms-social-url-input" value="${escapeHtml(item.url)}" data-social-field="url" data-social-index="${index}" placeholder="URL">
+            </div>
+            <button type="button" class="cms-button cms-button-small" data-social-remove-index="${index}" title="Verwijderen">✕</button>
+        </div>
+    `).join('');
+
+    listEl.querySelectorAll('.cms-social-label-input, .cms-social-url-input').forEach(input => {
+        input.addEventListener('input', () => {
+            const idx = Number(input.getAttribute('data-social-index'));
+            const field = input.getAttribute('data-social-field');
+            if (!Number.isInteger(idx) || idx < 0 || idx >= footerSocialLinksState.length) return;
+            footerSocialLinksState[idx] = { ...footerSocialLinksState[idx], [field]: input.value };
+            scheduleHomepageSettingsSave();
+        });
+    });
+}
+
 function setTaxonomyStatus(message, kind = '') {
     const statusEl = document.getElementById('taxonomy-status');
     if (!statusEl) return;
     statusEl.textContent = message || '';
     statusEl.className = `cms-status${kind ? ` cms-status-${kind}` : ''}`;
+}
+
+function normalizeHomepageInfoLink(rawValue) {
+    const value = String(rawValue || '').trim();
+    if (!value) {
+        return '#';
+    }
+    if (/^#+https?:\/\//i.test(value)) {
+        return value.replace(/^#+/, '');
+    }
+    if (/^(https?:\/\/|mailto:|tel:|\/)/i.test(value)) {
+        return value;
+    }
+    if (value.startsWith('#')) {
+        return value;
+    }
+    return `https://${value}`;
+}
+
+function applyHomepagePreviewLink(element, rawValue) {
+    if (!element) return;
+    const href = normalizeHomepageInfoLink(rawValue);
+    element.href = href;
+    const opensNewTab = href !== '#' && !href.startsWith('#');
+    element.target = opensNewTab ? '_blank' : '_self';
+    element.rel = opensNewTab ? 'noopener noreferrer' : '';
 }
 
 async function loadTaxonomies() {
@@ -378,6 +455,7 @@ async function loadTaxonomies() {
                                     <input type="checkbox" data-taxonomy-action="toggle-highlight-group" data-name="${escapeHtml(group.name)}" ${group.highlighted ? 'checked' : ''}>
                                     highlighted
                                 </label>
+                                ${group.name !== 'standaard' ? `<button class="cms-button cms-button-small" data-taxonomy-action="rename-group" data-name="${escapeHtml(group.name)}">Naam wijzigen</button>` : ''}
                                 <button class="cms-button cms-button-small" data-taxonomy-action="delete-group" data-name="${escapeHtml(group.name)}">Verwijderen</button>
                             </div>
                         </div>
@@ -398,6 +476,7 @@ async function loadTaxonomies() {
                                 <div class="cms-taxonomy-item-meta">${category.count || 0} artikel(s)${category.custom ? ' · custom' : ''}</div>
                             </div>
                             <div class="cms-taxonomy-item-actions">
+                                <button class="cms-button cms-button-small" data-taxonomy-action="rename-category" data-name="${escapeHtml(category.name)}">Naam wijzigen</button>
                                 <button class="cms-button cms-button-small" data-taxonomy-action="delete-category" data-name="${escapeHtml(category.name)}">Verwijderen</button>
                             </div>
                         </div>
@@ -493,6 +572,25 @@ async function handleTaxonomyAction(event) {
             return;
         }
 
+        if (action === 'rename-group') {
+            const nextName = prompt('Nieuwe naam voor deze group:', name);
+            const trimmedName = (nextName || '').trim();
+            if (!trimmedName || trimmedName === name) {
+                return;
+            }
+            const res = await fetch(`${API_BASE_URL}/taxonomies/groups/${encodeURIComponent(name)}/rename`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: trimmedName })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Hernoemen mislukt');
+            setTaxonomyStatus(`Group hernoemd naar "${data.name}". ${data.updatedArticles || 0} artikel(s) aangepast.`, 'success');
+            await loadTaxonomies();
+            await loadArticles();
+            return;
+        }
+
         if (action === 'delete-category') {
             if (!confirm(`Categorie "${name}" verwijderen? Categorie wordt leeggemaakt op gekoppelde artikels.`)) {
                 return;
@@ -503,6 +601,25 @@ async function handleTaxonomyAction(event) {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Verwijderen mislukt');
             setTaxonomyStatus(`Categorie verwijderd. ${data.updatedArticles || 0} artikel(s) aangepast.`, 'success');
+            await loadTaxonomies();
+            await loadArticles();
+            return;
+        }
+
+        if (action === 'rename-category') {
+            const nextName = prompt('Nieuwe naam voor deze categorie:', name);
+            const trimmedName = (nextName || '').trim();
+            if (!trimmedName || trimmedName === name) {
+                return;
+            }
+            const res = await fetch(`${API_BASE_URL}/taxonomies/categories/${encodeURIComponent(name)}/rename`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: trimmedName })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Hernoemen mislukt');
+            setTaxonomyStatus(`Categorie hernoemd naar "${data.name}". ${data.updatedArticles || 0} artikel(s) aangepast.`, 'success');
             await loadTaxonomies();
             await loadArticles();
         }
@@ -560,6 +677,7 @@ if (addProductBtn) {
 
 async function loadHomepageSettings() {
     const statusEl = document.getElementById('homepage-status');
+    window.__homepageSettingsLoading = true;
     try {
         const res = await fetch(`${API_BASE_URL}/site`);
         if (!res.ok) {
@@ -570,10 +688,24 @@ async function loadHomepageSettings() {
         document.getElementById('newsletterTextInput').value = data.newsletterText || '';
         document.getElementById('newsletterButtonTextInput').value = data.newsletterButtonText || '';
         document.getElementById('newsletterButtonLinkInput').value = data.newsletterButtonLink || '';
-        //HVLN // document.getElementById('workshopTitleInput').value = data.workshopTitle || '';
-        //HVLN // document.getElementById('workshopTextInput').value = data.workshopText || '';
-        //HVLN // document.getElementById('workshopButtonTextInput').value = data.workshopButtonText || '';
-        //HVLN // document.getElementById('workshopButtonLinkInput').value = data.workshopButtonLink || '';
+        document.getElementById('newsletterVisibleInput').checked = data.newsletterVisible !== false;
+        document.getElementById('workshopTitleInput').value = data.workshopTitle || '';
+        document.getElementById('workshopTextInput').value = data.workshopText || '';
+        document.getElementById('workshopButtonTextInput').value = data.workshopButtonText || '';
+        document.getElementById('workshopButtonLinkInput').value = data.workshopButtonLink || '';
+        document.getElementById('workshopVisibleInput').checked = data.workshopVisible !== false;
+        document.getElementById('shopVisibleInput').checked = data.shopVisible !== false;
+        footerSocialLinksState = Array.isArray(data.footerSocialLinks)
+            ? data.footerSocialLinks
+                .filter(item => item && typeof item === 'object')
+                .map(item => ({
+                    label: String(item.label || '').trim(),
+                    url: String(item.url || '').trim()
+                }))
+                .filter(item => item.label && item.url)
+            : [];
+        renderSocialLinksList();
+        updateHomepagePreview();
         if (statusEl) {
             statusEl.textContent = '';
         }
@@ -581,10 +713,65 @@ async function loadHomepageSettings() {
         if (statusEl) {
             statusEl.textContent = 'Fout bij laden van homepage instellingen.';
         }
+    } finally {
+        window.__homepageSettingsLoading = false;
     }
 }
 
-async function saveHomepageSettings() {
+let homepageAutoSaveTimer = null;
+
+function scheduleHomepageSettingsSave() {
+    if (window.__homepageSettingsLoading) {
+        return;
+    }
+    const statusEl = document.getElementById('homepage-status');
+    if (statusEl) {
+        statusEl.textContent = 'Wijzigingen worden opgeslagen...';
+        statusEl.className = 'cms-status';
+    }
+    if (homepageAutoSaveTimer) {
+        clearTimeout(homepageAutoSaveTimer);
+    }
+    homepageAutoSaveTimer = setTimeout(() => {
+        saveHomepageSettings(true);
+    }, 350);
+}
+
+function updateHomepagePreview() {
+    const newsletterPreviewBox = document.getElementById('newsletterPreviewBox');
+    const newsletterPreviewTitle = document.getElementById('newsletterPreviewTitle');
+    const newsletterPreviewText = document.getElementById('newsletterPreviewText');
+    const newsletterPreviewButton = document.getElementById('newsletterPreviewButton');
+    const workshopPreviewBox = document.getElementById('workshopPreviewBox');
+    const workshopPreviewTitle = document.getElementById('workshopPreviewTitle');
+    const workshopPreviewText = document.getElementById('workshopPreviewText');
+    const workshopPreviewButton = document.getElementById('workshopPreviewButton');
+
+    const newsletterVisible = document.getElementById('newsletterVisibleInput')?.checked !== false;
+    const workshopVisible = document.getElementById('workshopVisibleInput')?.checked !== false;
+
+    if (newsletterPreviewTitle) newsletterPreviewTitle.textContent = document.getElementById('newsletterTitleInput')?.value.trim() || 'Lege titel';
+    if (newsletterPreviewText) newsletterPreviewText.textContent = document.getElementById('newsletterTextInput')?.value.trim() || 'Lege tekst';
+    if (newsletterPreviewButton) {
+        newsletterPreviewButton.textContent = document.getElementById('newsletterButtonTextInput')?.value.trim() || 'Knop';
+        applyHomepagePreviewLink(newsletterPreviewButton, document.getElementById('newsletterButtonLinkInput')?.value.trim());
+    }
+    if (newsletterPreviewBox) {
+        newsletterPreviewBox.style.opacity = newsletterVisible ? '1' : '0.45';
+    }
+
+    if (workshopPreviewTitle) workshopPreviewTitle.textContent = document.getElementById('workshopTitleInput')?.value.trim() || 'Lege titel';
+    if (workshopPreviewText) workshopPreviewText.textContent = document.getElementById('workshopTextInput')?.value.trim() || 'Lege tekst';
+    if (workshopPreviewButton) {
+        workshopPreviewButton.textContent = document.getElementById('workshopButtonTextInput')?.value.trim() || 'Knop';
+        applyHomepagePreviewLink(workshopPreviewButton, document.getElementById('workshopButtonLinkInput')?.value.trim());
+    }
+    if (workshopPreviewBox) {
+        workshopPreviewBox.style.opacity = workshopVisible ? '1' : '0.45';
+    }
+}
+
+async function saveHomepageSettings(isAutomatic = false) {
     const statusEl = document.getElementById('homepage-status');
     if (statusEl) {
         statusEl.textContent = 'Opslaan...';
@@ -594,10 +781,14 @@ async function saveHomepageSettings() {
         newsletterText: document.getElementById('newsletterTextInput').value.trim(),
         newsletterButtonText: document.getElementById('newsletterButtonTextInput').value.trim(),
         newsletterButtonLink: document.getElementById('newsletterButtonLinkInput').value.trim(),
-        //HLVN // workshopTitle: document.getElementById('workshopTitleInput').value.trim(),
-        //HVLN // workshopText: document.getElementById('workshopTextInput').value.trim(),
-        //HVLN // workshopButtonText: document.getElementById('workshopButtonTextInput').value.trim(),
-        //HVLN // workshopButtonLink: document.getElementById('workshopButtonLinkInput').value.trim()
+        newsletterVisible: !!document.getElementById('newsletterVisibleInput').checked,
+        workshopTitle: document.getElementById('workshopTitleInput').value.trim(),
+        workshopText: document.getElementById('workshopTextInput').value.trim(),
+        workshopButtonText: document.getElementById('workshopButtonTextInput').value.trim(),
+        workshopButtonLink: document.getElementById('workshopButtonLinkInput').value.trim(),
+        workshopVisible: !!document.getElementById('workshopVisibleInput').checked,
+        shopVisible: !!document.getElementById('shopVisibleInput').checked,
+        footerSocialLinks: footerSocialLinksState
     };
     try {
         const res = await fetch(`${API_BASE_URL}/site`, {
@@ -609,11 +800,13 @@ async function saveHomepageSettings() {
             throw new Error('Opslaan mislukt');
         }
         if (statusEl) {
-            statusEl.textContent = 'Opgeslagen.';
+            statusEl.textContent = isAutomatic ? 'Automatisch opgeslagen.' : 'Opgeslagen.';
+            statusEl.className = 'cms-status cms-status-success';
         }
     } catch (error) {
         if (statusEl) {
             statusEl.textContent = 'Fout bij opslaan.';
+            statusEl.className = 'cms-status cms-status-error';
         }
     }
 }
@@ -622,6 +815,97 @@ const saveHomepageBtn = document.getElementById('save-homepage-btn');
 if (saveHomepageBtn) {
     saveHomepageBtn.addEventListener('click', saveHomepageSettings);
 }
+
+[
+    'newsletterTitleInput',
+    'newsletterTextInput',
+    'newsletterButtonTextInput',
+    'newsletterButtonLinkInput',
+    'newsletterVisibleInput',
+    'workshopTitleInput',
+    'workshopTextInput',
+    'workshopButtonTextInput',
+    'workshopButtonLinkInput',
+    'workshopVisibleInput',
+    'shopVisibleInput'
+].forEach(id => {
+    const element = document.getElementById(id);
+    if (!element) return;
+    element.addEventListener(element.type === 'checkbox' ? 'change' : 'input', () => {
+        updateHomepagePreview();
+        scheduleHomepageSettingsSave();
+    });
+});
+
+async function loadContactSettings() {
+    const statusEl = document.getElementById('contact-status');
+    window.__contactSettingsLoading = true;
+    try {
+        const res = await fetch(`${API_BASE_URL}/site`);
+        if (!res.ok) throw new Error('Instellingen niet gevonden');
+        const data = await res.json();
+        document.getElementById('contactIntroInput').value = data.contactIntro || '';
+        document.getElementById('contactEmailInput').value = data.contactEmail || '';
+        document.getElementById('contactPhoneInput').value = data.contactPhone || '';
+        document.getElementById('contactAddressInput').value = data.contactAddress || '';
+        if (statusEl) statusEl.textContent = '';
+    } catch (error) {
+        if (statusEl) statusEl.textContent = 'Fout bij laden van contact instellingen.';
+    } finally {
+        window.__contactSettingsLoading = false;
+    }
+}
+
+let contactAutoSaveTimer = null;
+
+function scheduleContactSettingsSave() {
+    if (window.__contactSettingsLoading) return;
+    const statusEl = document.getElementById('contact-status');
+    if (statusEl) {
+        statusEl.textContent = 'Wijzigingen worden opgeslagen...';
+        statusEl.className = 'cms-status';
+    }
+    if (contactAutoSaveTimer) clearTimeout(contactAutoSaveTimer);
+    contactAutoSaveTimer = setTimeout(() => saveContactSettings(true), 350);
+}
+
+async function saveContactSettings(isAutomatic = false) {
+    const statusEl = document.getElementById('contact-status');
+    if (statusEl) statusEl.textContent = 'Opslaan...';
+    const payload = {
+        contactIntro: document.getElementById('contactIntroInput').value.trim(),
+        contactEmail: document.getElementById('contactEmailInput').value.trim(),
+        contactPhone: document.getElementById('contactPhoneInput').value.trim(),
+        contactAddress: document.getElementById('contactAddressInput').value.trim()
+    };
+    try {
+        const res = await fetch(`${API_BASE_URL}/site`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error('Opslaan mislukt');
+        if (statusEl) {
+            statusEl.textContent = isAutomatic ? 'Automatisch opgeslagen.' : 'Opgeslagen.';
+            statusEl.className = 'cms-status cms-status-success';
+        }
+    } catch (error) {
+        if (statusEl) {
+            statusEl.textContent = 'Fout bij opslaan.';
+            statusEl.className = 'cms-status cms-status-error';
+        }
+    }
+}
+
+const saveContactBtn = document.getElementById('save-contact-btn');
+if (saveContactBtn) {
+    saveContactBtn.addEventListener('click', saveContactSettings);
+}
+
+['contactIntroInput', 'contactEmailInput', 'contactPhoneInput', 'contactAddressInput'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', scheduleContactSettingsSave);
+});
 
 async function updateOrderStatus(orderId, newStatus) {
     try {
@@ -758,7 +1042,8 @@ document.addEventListener('DOMContentLoaded', () => {
         'cms-tab-products': document.getElementById('cms-tab-products'),
         'cms-tab-content': document.getElementById('cms-tab-content'),
         'cms-tab-stats': document.getElementById('cms-tab-stats'),
-        'cms-tab-homepage': document.getElementById('cms-tab-homepage')
+        'cms-tab-homepage': document.getElementById('cms-tab-homepage'),
+        'cms-tab-contact': document.getElementById('cms-tab-contact')
     };
     tabBtns.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -794,9 +1079,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Settings handlers
     const loadSettingsBtn = document.getElementById('load-settings-btn');
     const saveSettingsBtn = document.getElementById('save-settings-btn');
+    const deployServerBtn = document.getElementById('deploy-server-btn');
     const cmsPasswordInput = document.getElementById('cmsPasswordInput');
     const stripeSecretInput = document.getElementById('stripeSecretKeyInput');
     const stripePublishableInput = document.getElementById('stripePublishableKeyInput');
+    const socialPlatformInput = document.getElementById('socialPlatformInput');
+    const socialLinkInput = document.getElementById('socialLinkInput');
+    const addSocialLinkBtn = document.getElementById('add-social-link-btn');
+    const socialLinksList = document.getElementById('social-links-list');
     const settingsStatus = document.getElementById('settingsStatus');
 
     if (loadSettingsBtn) {
@@ -804,21 +1094,79 @@ document.addEventListener('DOMContentLoaded', () => {
             settingsStatus.textContent = 'Laden...';
             settingsStatus.className = 'cms-status';
             try {
-                const response = await fetch('/api/cms/stripe-config');
-                const data = await response.json();
-                if (response.ok) {
-                    stripeSecretInput.value = data.secret_key_full;
-                    stripePublishableInput.value = data.publishable_key_full;
-                    settingsStatus.textContent = data.configured ? 'Stripe is geconfigureerd' : 'Geen Stripe keys ingesteld';
-                    settingsStatus.className = data.configured ? 'cms-status cms-status-success' : 'cms-status';
+                const stripeResponse = await fetch('/api/cms/stripe-config');
+                const stripeData = await stripeResponse.json();
+
+                if (stripeResponse.ok) {
+                    stripeSecretInput.value = stripeData.secret_key_full;
+                    stripePublishableInput.value = stripeData.publishable_key_full;
+                }
+
+                if (stripeResponse.ok) {
+                    settingsStatus.textContent = stripeData.configured ? 'Instellingen geladen' : 'Instellingen geladen (geen Stripe keys ingesteld)';
+                    settingsStatus.className = 'cms-status cms-status-success';
                 } else {
-                    settingsStatus.textContent = 'Fout bij laden van instellingen';
+                    settingsStatus.textContent = 'Fout bij laden van Stripe instellingen';
                     settingsStatus.className = 'cms-status cms-status-error';
                 }
             } catch (error) {
                 console.error('Error loading settings:', error);
                 settingsStatus.textContent = 'Fout bij laden van instellingen';
                 settingsStatus.className = 'cms-status cms-status-error';
+            }
+        });
+    }
+
+    if (addSocialLinkBtn) {
+        addSocialLinkBtn.addEventListener('click', () => {
+            const label = (socialPlatformInput?.value || '').trim();
+            const url = normalizeSocialLink((socialLinkInput?.value || '').trim());
+            const homepageStatus = document.getElementById('homepage-status');
+            if (!label || !url || url === '#') {
+                if (homepageStatus) {
+                    homepageStatus.textContent = 'Geef een platform en geldige link op.';
+                    homepageStatus.className = 'cms-status cms-status-error';
+                }
+                return;
+            }
+            footerSocialLinksState.push({ label, url });
+            if (socialPlatformInput) socialPlatformInput.value = '';
+            if (socialLinkInput) socialLinkInput.value = '';
+            renderSocialLinksList();
+            scheduleHomepageSettingsSave();
+        });
+    }
+
+    if (socialLinksList) {
+        socialLinksList.addEventListener('click', (event) => {
+            const target = event.target;
+            if (!(target instanceof HTMLElement)) return;
+
+            const removeIndex = target.getAttribute('data-social-remove-index');
+            if (removeIndex !== null) {
+                const index = Number(removeIndex);
+                if (!Number.isInteger(index) || index < 0 || index >= footerSocialLinksState.length) return;
+                footerSocialLinksState.splice(index, 1);
+                renderSocialLinksList();
+                scheduleHomepageSettingsSave();
+                return;
+            }
+
+            const moveDir = target.getAttribute('data-social-move');
+            if (moveDir !== null) {
+                const index = Number(target.getAttribute('data-social-index'));
+                if (!Number.isInteger(index) || index < 0 || index >= footerSocialLinksState.length) return;
+                if (moveDir === 'up' && index > 0) {
+                    [footerSocialLinksState[index - 1], footerSocialLinksState[index]] =
+                        [footerSocialLinksState[index], footerSocialLinksState[index - 1]];
+                }
+                if (moveDir === 'down' && index < footerSocialLinksState.length - 1) {
+                    [footerSocialLinksState[index], footerSocialLinksState[index + 1]] =
+                        [footerSocialLinksState[index + 1], footerSocialLinksState[index]];
+                }
+                renderSocialLinksList();
+                scheduleHomepageSettingsSave();
+                return;
             }
         });
     }
@@ -922,11 +1270,44 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    if (deployServerBtn) {
+        deployServerBtn.addEventListener('click', async () => {
+            if (!confirm('Ben je zeker dat je de server wilt updaten en herstarten via setup_vps.sh? Dit kan de site kort onderbreken.')) {
+                return;
+            }
+
+            settingsStatus.textContent = 'Deploy wordt gestart...';
+            settingsStatus.className = 'cms-status';
+            deployServerBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/cms/deploy', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || 'Deploy starten mislukt');
+                }
+                settingsStatus.textContent = data.message || 'Deploy gestart. Git sync en herstart lopen nu op de server.';
+                settingsStatus.className = 'cms-status cms-status-success';
+            } catch (error) {
+                settingsStatus.textContent = error.message || 'Fout bij starten van deploy';
+                settingsStatus.className = 'cms-status cms-status-error';
+            } finally {
+                deployServerBtn.disabled = false;
+            }
+        });
+    }
+
     // Laad data
     loadStats();
     loadArticles();
     loadProducts();
     loadTaxonomies();
     loadHomepageSettings();
+    loadContactSettings();
     loadOrders();
 });

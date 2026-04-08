@@ -4,6 +4,7 @@ const loadingEl = document.getElementById('article-loading');
 const errorEl = document.getElementById('article-error');
 const contentEl = document.getElementById('article-content');
 const navSubmenuEl = document.querySelector('.nav-submenu');
+const shareSlotEl = document.getElementById('article-share-slot');
 
 function getArticleId() {
     const pathMatch = window.location.pathname.match(/\/article\/([^/]+)$/);
@@ -80,6 +81,120 @@ function getCategoryValue(article) {
     return (article && article.category ? String(article.category) : '').trim();
 }
 
+function getArticleShareUrl(article) {
+    if (article && article.id) {
+        return `${window.location.origin}/article/${encodeURIComponent(article.id)}`;
+    }
+    return window.location.href;
+}
+
+function buildShareMarkup(article) {
+    const shareUrl = getArticleShareUrl(article);
+    const shareTitle = article && article.title ? article.title : 'Artikel';
+    const encodedUrl = encodeURIComponent(shareUrl);
+    const encodedText = encodeURIComponent(`${shareTitle} - ${shareUrl}`);
+
+    return `
+        <div class="article-share" aria-label="Artikel delen">
+            <button type="button" class="article-share-toggle" data-share-action="toggle" aria-expanded="false">Deel</button>
+            <div class="article-share-popup" hidden>
+                <button type="button" class="article-share-btn" data-share-action="native">Delen</button>
+                <a class="article-share-btn article-share-link" href="https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}" target="_blank" rel="noopener">Facebook</a>
+                <a class="article-share-btn article-share-link" href="https://wa.me/?text=${encodedText}" target="_blank" rel="noopener">WhatsApp</a>
+                <button type="button" class="article-share-btn" data-share-action="copy" data-share-url="${shareUrl}">Kopieer link</button>
+                <div class="article-share-feedback" aria-live="polite"></div>
+            </div>
+        </div>
+    `;
+}
+
+function wireShareActions(article) {
+    const shareRoot = shareSlotEl ? shareSlotEl.querySelector('.article-share') : null;
+    if (!shareRoot) return;
+    const toggleButton = shareRoot.querySelector('[data-share-action="toggle"]');
+    const popup = shareRoot.querySelector('.article-share-popup');
+    const feedback = shareRoot.querySelector('.article-share-feedback');
+
+    const closePopup = () => {
+        if (!popup || !toggleButton) return;
+        popup.hidden = true;
+        toggleButton.setAttribute('aria-expanded', 'false');
+    };
+
+    const openPopup = () => {
+        if (!popup || !toggleButton) return;
+        popup.hidden = false;
+        toggleButton.setAttribute('aria-expanded', 'true');
+    };
+
+    if (toggleButton && popup) {
+        toggleButton.addEventListener('click', (event) => {
+            event.stopPropagation();
+            if (popup.hidden) {
+                openPopup();
+            } else {
+                closePopup();
+            }
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!shareRoot.contains(event.target)) {
+                closePopup();
+            }
+        });
+    }
+
+    shareRoot.querySelectorAll('[data-share-action="native"]').forEach(button => {
+        if (!navigator.share) {
+            button.style.display = 'none';
+            return;
+        }
+        button.addEventListener('click', async () => {
+            try {
+                await navigator.share({
+                    title: article && article.title ? article.title : 'Artikel',
+                    url: getArticleShareUrl(article)
+                });
+                closePopup();
+            } catch (error) {
+                if (error && error.name !== 'AbortError') {
+                    console.error('Delen mislukt:', error);
+                }
+            }
+        });
+    });
+
+    shareRoot.querySelectorAll('[data-share-action="copy"]').forEach(button => {
+        button.addEventListener('click', async () => {
+            const url = button.dataset.shareUrl || window.location.href;
+            try {
+                await navigator.clipboard.writeText(url);
+                button.textContent = 'Gekopieerd';
+                if (feedback) {
+                    feedback.textContent = 'Link gekopieerd naar klembord';
+                }
+                setTimeout(() => {
+                    button.textContent = 'Kopieer link';
+                    if (feedback) {
+                        feedback.textContent = '';
+                    }
+                }, 1800);
+            } catch (error) {
+                if (feedback) {
+                    feedback.textContent = 'Kopieren mislukt';
+                }
+                console.error('Link kopieren mislukt:', error);
+            }
+        });
+    });
+
+    shareRoot.querySelectorAll('.article-share-link').forEach(link => {
+        link.addEventListener('click', () => {
+            closePopup();
+        });
+    });
+}
+
 function buildCategoryHeader(categories, activeCategory = '') {
     if (!navSubmenuEl) return;
 
@@ -150,6 +265,9 @@ async function loadArticle() {
         const article = await res.json();
         await loadHeaderCategories(getCategoryValue(article));
         const dateText = formatDate(article.created_at);
+        if (shareSlotEl) {
+            shareSlotEl.innerHTML = buildShareMarkup(article);
+        }
 
         contentEl.innerHTML = `
             <div class="article-header">
@@ -168,9 +286,13 @@ async function loadArticle() {
         } else {
             contentEl.classList.remove('article-content-tekst');
         }
+        wireShareActions(article);
         loadingEl.style.display = 'none';
         contentEl.style.display = 'block';
     } catch (error) {
+        if (shareSlotEl) {
+            shareSlotEl.innerHTML = '';
+        }
         loadingEl.style.display = 'none';
         errorEl.style.display = 'block';
         errorEl.textContent = `Fout bij laden: ${error.message}`;

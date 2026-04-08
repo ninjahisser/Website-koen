@@ -420,6 +420,66 @@ showArticleDetail(article) {
 }
 }
 
+    function normalizeSidebarLink(rawValue) {
+        const value = String(rawValue || '').trim();
+        if (!value) {
+            return '#';
+        }
+        if (/^#+https?:\/\//i.test(value)) {
+            return value.replace(/^#+/, '');
+        }
+        if (/^(https?:\/\/|mailto:|tel:|\/)/i.test(value)) {
+            return value;
+        }
+        if (value.startsWith('#')) {
+            return value;
+        }
+        return `https://${value}`;
+    }
+
+    function applySidebarLink(button, rawValue) {
+        if (!button) return;
+        const href = normalizeSidebarLink(rawValue);
+        button.href = href;
+        const opensNewTab = href !== '#' && !href.startsWith('#');
+        button.target = opensNewTab ? '_blank' : '_self';
+        button.rel = opensNewTab ? 'noopener noreferrer' : '';
+    }
+
+    function renderFooterSocialLinks(container, links) {
+        if (!container) return;
+        const section = container.closest('.footer-section');
+        const items = Array.isArray(links)
+            ? links.filter(item => item && typeof item === 'object')
+                .map(item => ({
+                    label: String(item.label || '').trim(),
+                    url: String(item.url || '').trim()
+                }))
+                .filter(item => item.label && item.url)
+            : [];
+
+        container.innerHTML = '';
+        if (items.length === 0) {
+            if (section) {
+                section.style.display = 'none';
+            }
+            return;
+        }
+
+        items.forEach(item => {
+            const li = document.createElement('li');
+            const link = document.createElement('a');
+            link.textContent = item.label;
+            applySidebarLink(link, item.url);
+            li.appendChild(link);
+            container.appendChild(li);
+        });
+
+        if (section) {
+            section.style.display = '';
+        }
+    }
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', async () => {
     const loader = new ArticleLoader();
@@ -435,9 +495,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const newsletterTitle = document.getElementById('newsletterTitle');
     const newsletterText = document.getElementById('newsletterText');
     const newsletterButton = document.getElementById('newsletterButton');
+    const infoBlockOne = document.getElementById('infoBlockOne');
     const workshopTitle = document.getElementById('workshopTitle');
     const workshopText = document.getElementById('workshopText');
     const workshopButton = document.getElementById('workshopButton');
+    const infoBlockTwo = document.getElementById('infoBlockTwo');
+    const footerShopLink = document.getElementById('footerShopLink');
+    const footerGeneralSection = document.getElementById('footerGeneralSection');
+    const footerSocialLinks = document.getElementById('footerSocialLinks');
     const navSubmenu = document.querySelector('.nav-submenu');
 
     try {
@@ -453,14 +518,29 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (newsletterText) newsletterText.textContent = siteSettings.newsletterText || '';
             if (newsletterButton) {
                 newsletterButton.textContent = siteSettings.newsletterButtonText || '';
-                newsletterButton.href = siteSettings.newsletterButtonLink || '#';
+                applySidebarLink(newsletterButton, siteSettings.newsletterButtonLink);
+            }
+            if (infoBlockOne) {
+                infoBlockOne.style.display = siteSettings.newsletterVisible === false ? 'none' : '';
             }
             if (workshopTitle) workshopTitle.textContent = siteSettings.workshopTitle || '';
             if (workshopText) workshopText.textContent = siteSettings.workshopText || '';
             if (workshopButton) {
                 workshopButton.textContent = siteSettings.workshopButtonText || '';
-                workshopButton.href = siteSettings.workshopButtonLink || '#';
+                applySidebarLink(workshopButton, siteSettings.workshopButtonLink);
             }
+            if (infoBlockTwo) {
+                infoBlockTwo.style.display = siteSettings.workshopVisible === false ? 'none' : '';
+            }
+            if (footerShopLink) {
+                footerShopLink.style.display = siteSettings.shopVisible === false ? 'none' : '';
+            }
+            if (footerGeneralSection) {
+                const visibleLinks = Array.from(footerGeneralSection.querySelectorAll('a'))
+                    .filter(link => link.style.display !== 'none');
+                footerGeneralSection.style.display = visibleLinks.length > 0 ? '' : 'none';
+            }
+            renderFooterSocialLinks(footerSocialLinks, siteSettings.footerSocialLinks);
             const configuredHighlights = Array.isArray(siteSettings.highlightedGroups)
                 ? siteSettings.highlightedGroups.filter(item => typeof item === 'string' && item.trim()).map(item => item.trim())
                 : [];
@@ -680,16 +760,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             loader.pendingStandaardArticles = [];
 
             const filteredArticles = filterByGroup(filterByCategory(articlesData || [], selectedCategory), selectedGroup);
-            let heroArticle = null;
-            for (const article of filteredArticles) {
-                if (loader.getThumbnailImageUrl(article)) {
-                    heroArticle = article;
-                    break;
-                }
-            }
-            if (!heroArticle) {
-                heroArticle = filteredArticles[0] || null;
-            }
+            const heroArticle = filteredArticles[0] || null;
             const heroArticleId = heroArticle && heroArticle.id ? heroArticle.id : null;
 
             if (heroTitle) {
@@ -699,8 +770,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 heroLink.href = heroArticle && heroArticle.id ? `/article/${heroArticle.id}` : '#';
             }
             if (heroImage) {
-                const heroSrc = heroArticle ? loader.getThumbnailImageUrl(heroArticle) : null;
+                const isHeroTextOnly = loader.normalizeArticleSize(heroArticle && heroArticle.size) === 'tekst';
+                const heroSrc = (!isHeroTextOnly && heroArticle) ? loader.getThumbnailImageUrl(heroArticle) : null;
+                heroImage.classList.toggle('hero-image-text', isHeroTextOnly);
                 heroImage.style.backgroundImage = heroSrc ? `url('${resolveMediaUrl(heroSrc)}')` : 'none';
+                heroImage.style.backgroundColor = isHeroTextOnly ? 'var(--third)' : '';
             }
 
             const isNotHero = article => !heroArticleId || article.id !== heroArticleId;

@@ -2,9 +2,12 @@
 
 const statusEl = document.getElementById('create-status');
 const formEl = document.getElementById('create-form');
+const categorySelect = document.getElementById('category');
+const newCategoryInput = document.getElementById('new-category');
 const groupSelect = document.getElementById('group');
 const newGroupInput = document.getElementById('new-group');
 const componentsList = document.getElementById('components-list');
+const previewLink = document.getElementById('preview-link');
 const thumbnailModeInput = document.getElementById('thumbnail-mode');
 const thumbnailKindInput = document.getElementById('thumbnail-kind');
 const thumbnailUrlInput = document.getElementById('thumbnail-url');
@@ -60,6 +63,15 @@ if (logoutBtn) {
 
 function getArticleIdForUploads() {
     return `temp_${Date.now()}`;
+}
+
+function initPreviewLinkForCreate() {
+    if (!previewLink) return;
+    previewLink.href = '#';
+    previewLink.addEventListener('click', (event) => {
+        event.preventDefault();
+        setStatus('Preview is beschikbaar nadat het artikel is aangemaakt.', 'info');
+    });
 }
 
 function getYouTubeVideoId(src) {
@@ -265,15 +277,68 @@ function collectThumbnail() {
 
 async function loadGroups() {
     try {
-        const res = await fetch(`${API_BASE_URL}/groups`);
+        const res = await fetch(`${API_BASE_URL}/taxonomies`);
         if (!res.ok) {
             throw new Error('Groups niet gevonden');
         }
-        const groupsData = await res.json();
-        return Object.keys(groupsData || {}).sort();
+        const data = await res.json();
+        return (Array.isArray(data.groups) ? data.groups : [])
+            .map(item => (item && item.name ? String(item.name).trim() : ''))
+            .filter(Boolean)
+            .sort((a, b) => a.localeCompare(b));
     } catch (error) {
         return [];
     }
+}
+
+async function loadCategories() {
+    try {
+        const res = await fetch(`${API_BASE_URL}/taxonomies`);
+        if (!res.ok) {
+            throw new Error('Categorieen niet gevonden');
+        }
+        const data = await res.json();
+        return (Array.isArray(data.categories) ? data.categories : [])
+            .map(item => (item && item.name ? String(item.name).trim() : ''))
+            .filter(Boolean)
+            .sort((a, b) => a.localeCompare(b));
+    } catch (error) {
+        return [];
+    }
+}
+
+function populateCategorySelect(categories) {
+    if (!categorySelect) return;
+
+    const options = (categories || []).slice().sort((a, b) => a.localeCompare(b));
+
+    categorySelect.innerHTML = '';
+
+    const emptyOption = document.createElement('option');
+    emptyOption.value = '';
+    emptyOption.textContent = '-';
+    categorySelect.appendChild(emptyOption);
+
+    options.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category;
+        option.textContent = category;
+        categorySelect.appendChild(option);
+    });
+
+    const newOption = document.createElement('option');
+    newOption.value = '__new__';
+    newOption.textContent = 'Nieuwe categorie aanmaken';
+    categorySelect.appendChild(newOption);
+
+    categorySelect.value = '';
+    toggleNewCategoryInput();
+}
+
+function toggleNewCategoryInput() {
+    if (!categorySelect || !newCategoryInput) return;
+    const isNew = categorySelect.value === '__new__';
+    newCategoryInput.style.display = isNew ? 'block' : 'none';
 }
 
 function populateGroupSelect(groups) {
@@ -305,6 +370,9 @@ function toggleNewGroupInput() {
 }
 
 groupSelect.addEventListener('change', toggleNewGroupInput);
+if (categorySelect) {
+    categorySelect.addEventListener('change', toggleNewCategoryInput);
+}
 
 if (thumbnailModeInput) {
     thumbnailModeInput.addEventListener('change', toggleThumbnailFields);
@@ -630,6 +698,9 @@ formEl.addEventListener('submit', async (event) => {
     event.preventDefault();
 
     const components = collectComponents();
+    const categoryValue = categorySelect && categorySelect.value === '__new__'
+        ? newCategoryInput.value.trim()
+        : (categorySelect ? categorySelect.value.trim() : '');
     const groupValue = groupSelect.value === '__new__'
         ? newGroupInput.value.trim()
         : groupSelect.value.trim();
@@ -641,7 +712,7 @@ formEl.addEventListener('submit', async (event) => {
 
     const payload = {
         title: document.getElementById('title').value.trim(),
-        category: document.getElementById('category').value.trim(),
+        category: categoryValue,
         group: groupValue,
         size: document.getElementById('size').value,
         components,
@@ -668,5 +739,9 @@ formEl.addEventListener('submit', async (event) => {
     }
 });
 
-loadGroups().then(populateGroupSelect);
+Promise.all([loadGroups(), loadCategories()]).then(([groups, categories]) => {
+    populateGroupSelect(groups);
+    populateCategorySelect(categories);
+});
+initPreviewLinkForCreate();
 toggleThumbnailFields();

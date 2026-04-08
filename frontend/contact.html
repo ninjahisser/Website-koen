@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact — Studio Malem</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .contact-page {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 80px 20px 60px;
+        }
+        .contact-page h1 {
+            margin-bottom: 16px;
+        }
+        .contact-intro {
+            margin-bottom: 32px;
+            line-height: 1.6;
+        }
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: start;
+        }
+        @media (max-width: 640px) {
+            .contact-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .contact-details h2 {
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+        }
+        .contact-details p {
+            margin: 6px 0;
+            line-height: 1.6;
+        }
+        .contact-details a {
+            color: var(--third, #333);
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <figure class="logo_malem">
+            <img src="/img/studiomalem_header.png" alt="Studio Malem Logo">
+        </figure>
+    </nav>
+
+    <main class="article-page">
+        <div class="article-top-actions">
+            <button class="article-back-btn" onclick="history.back()">← Terug</button>
+        </div>
+
+        <div class="contact-page">
+            <h1>Contact</h1>
+            <p id="contact-intro" class="contact-intro"></p>
+
+            <div class="contact-grid">
+                <div class="contact-details" id="contact-details-block">
+                    <h2>Contactgegevens</h2>
+                    <p id="contact-email-row" style="display:none;"><strong>E-mail:</strong> <a id="contact-email-link" href="#">—</a></p>
+                    <p id="contact-phone-row" style="display:none;"><strong>Telefoon:</strong> <span id="contact-phone-text">—</span></p>
+                    <p id="contact-address-row" style="display:none;"><strong>Adres:</strong> <span id="contact-address-text"></span></p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/contact.js"></script>
+</body>
+
+</html>

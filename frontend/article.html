@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Artikel</title>
+    <!-- ARTICLE_SHARE_META -->
     <link rel="stylesheet" href="/css/style.css">
 </head>
 
@@ -25,7 +26,7 @@
             -->
 
         <figure class="logo_malem">
-            <img src="/img/studiomalem_header.png" alt="Studio Malem Logo" style="height: 40px;">
+            <img src="/img/studiomalem_header.png" alt="Studio Malem Logo">
         </figure>
 
         <div class="nav-submenu">
@@ -35,9 +36,10 @@
     </nav>
 
     <main class="article-page">
-        <button onclick="history.back()"
-            style="background-color: var(--third); color: white; border: none; padding: 10px 20px; font-weight: bold; cursor: pointer; margin-bottom: 20px; font-size: 14px; position: fixed; margin: 10px;">←
-            Terug</button>
+        <div class="article-top-actions">
+            <button class="article-back-btn" onclick="history.back()">← Terug</button>
+            <div id="article-share-slot"></div>
+        </div>
         <div id="article-loading" class="loading">Artikel laden...</div>
         <div id="article-error" class="error" style="display: none;"></div>
         <article id="article-content" class="article-content" style="display: none;"></article>

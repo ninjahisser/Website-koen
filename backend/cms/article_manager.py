@@ -77,6 +77,48 @@ class ArticleManager:
         ]
         return (max(orders) + 1000) if orders else 1000
 
+    def _first_global_order(self, articles):
+        orders = [item.get('order_global') for item in articles if self._is_valid_order(item.get('order_global'))]
+        if not orders:
+            return 1000
+
+        min_order = min(orders)
+        if min_order > 1:
+            return max(1, min_order // 2)
+
+        # No room left above the first item: shift all existing orders down once.
+        now = datetime.now().isoformat()
+        for article in articles:
+            if not self._is_valid_order(article.get('order_global')):
+                continue
+            article['order_global'] = article.get('order_global') + 1000
+            article['updated_at'] = now
+            self._write_article(article)
+        return 1000
+
+    def _first_group_order(self, articles, group_name):
+        normalized_group = (group_name or 'standaard').strip() or 'standaard'
+        group_articles = [
+            item for item in articles
+            if ((item.get('group') or 'standaard').strip() or 'standaard') == normalized_group
+        ]
+        orders = [item.get('order_in_group') for item in group_articles if self._is_valid_order(item.get('order_in_group'))]
+        if not orders:
+            return 1000
+
+        min_order = min(orders)
+        if min_order > 1:
+            return max(1, min_order // 2)
+
+        now = datetime.now().isoformat()
+        for article in group_articles:
+            if not self._is_valid_order(article.get('order_in_group')):
+                continue
+            article['order_in_group'] = article.get('order_in_group') + 1000
+            article['updated_at'] = now
+            self._write_article(article)
+        return 1000
+
     def _created_timestamp(self, article):
         raw = article.get('created_at')
         if not raw:
@@ -98,8 +140,8 @@ class ArticleManager:
             'category': (category or '').strip(),
             'size': size or 'klein',
             'components': normalized_components,
-            'order_global': self._next_global_order(existing_articles),
-            'order_in_group': self._next_group_order(existing_articles, normalized_group),
+            'order_global': self._first_global_order(existing_articles),
+            'order_in_group': self._first_group_order(existing_articles, normalized_group),
             'created_at': now,
             'updated_at': now
         }
@@ -327,6 +369,21 @@ class ArticleManager:
             changed += 1
         return changed
 
+    def rename_group(self, source_group, target_group):
+        source = (source_group or '').strip()
+        target = (target_group or '').strip()
+        if not source or not target or source == target:
+            return 0
+
+        changed = 0
+        for article in self.get_all_articles():
+            current_group = (article.get('group') or 'standaard').strip() or 'standaard'
+            if current_group != source:
+                continue
+            self.update_article(article['id'], group=target)
+            changed += 1
+        return changed
+
     def clear_category(self, category_name):
         source = (category_name or '').strip()
         if not source:
@@ -338,6 +395,21 @@ class ArticleManager:
             if current_category != source:
                 continue
             self.update_article(article['id'], category='')
+            changed += 1
+        return changed
+
+    def rename_category(self, source_category, target_category):
+        source = (source_category or '').strip()
+        target = (target_category or '').strip()
+        if not source or not target or source == target:
+            return 0
+
+        changed = 0
+        for article in self.get_all_articles():
+            current_category = (article.get('category') or '').strip()
+            if current_category != source:
+                continue
+            self.update_article(article['id'], category=target)
             changed += 1
         return changed
 

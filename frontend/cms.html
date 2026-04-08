@@ -124,6 +124,7 @@
             <button class="cms-tab-btn active" data-tab="cms-tab-articles">Artikelen</button>
             <button class="cms-tab-btn" data-tab="cms-tab-taxonomy">Groups & categorieen</button>
             <button class="cms-tab-btn" data-tab="cms-tab-homepage">Homepage</button>
+            <button class="cms-tab-btn" data-tab="cms-tab-contact">Contact</button>
             <button class="cms-tab-btn" data-tab="cms-tab-stats">Statistieken</button>
             <button class="cms-tab-btn" data-tab="cms-tab-products">Shop</button>
             <button class="cms-tab-btn" data-tab="cms-tab-orders">Bestellingen</button>
@@ -149,6 +150,12 @@
                         <p class="cms-section-note">Voeg producten toe die op de shop-pagina verschijnen en via Stripe afgerekend worden.</p>
                     </div>
                     <button id="add-product-btn" class="cms-button">Nieuw product toevoegen</button>
+                </div>
+                <div class="cms-form-row">
+                    <label class="cms-homepage-toggle cms-shop-visibility-toggle" for="shopVisibleInput">
+                        <input id="shopVisibleInput" type="checkbox">
+                        <span>Shop zichtbaar in footer</span>
+                    </label>
                 </div>
                 <div id="products-container"></div>
             </section>
@@ -244,12 +251,15 @@
                         <button class="cms-toggle-pw-btn" data-target="stripePublishableKeyInput" title="Toon/verberg">👁</button>
                     </div>
                 </div>
-                
+
                 <div id="settingsStatus" class="cms-status"></div>
+
+                <p class="cms-section-note">Gebruik de deploy-knop om via setup_vps.sh de server te updaten, git te syncen en de VPS-config opnieuw toe te passen.</p>
                 
                 <div class="cms-actions">
                     <button id="load-settings-btn" class="cms-button">Instellingen laden</button>
                     <button id="save-settings-btn" class="cms-button">Instellingen opslaan</button>
+                    <button id="deploy-server-btn" class="cms-button cms-button-secondary">Server updaten en herstarten</button>
                 </div>
             </section>
         </div>
@@ -262,45 +272,128 @@
         <div id="cms-tab-homepage" class="cms-tab-content" style="display:none;">
             <section id="cms-homepage" class="cms-section">
                 <h2>Homepage sidebar</h2>
-                <!-- HVLN <div class="cms-field-grid"> -->
-                    <div class="cms-form-row">
-                        <label for="newsletterTitleInput">Nieuwsbrief titel</label>
-                        <input id="newsletterTitleInput" type="text" class="cms-input">
+                <div class="cms-homepage-grid">
+                    <div class="cms-homepage-card">
+                        <div class="cms-section-header">
+                            <div>
+                                <h3>Eerste info blok</h3>
+                                <p class="cms-section-note">Bovenste blok in de homepage sidebar.</p>
+                            </div>
+                            <label class="cms-homepage-toggle">
+                                <input id="newsletterVisibleInput" type="checkbox">
+                                <span>Zichtbaar</span>
+                            </label>
+                        </div>
+                        <div class="cms-form-row">
+                            <label for="newsletterTitleInput">Eerste info blok titel</label>
+                            <input id="newsletterTitleInput" type="text" class="cms-input">
+                        </div>
+                        <div class="cms-form-row">
+                            <label for="newsletterTextInput">Eerste info blok tekst</label>
+                            <input id="newsletterTextInput" type="text" class="cms-input">
+                        </div>
+                        <div class="cms-form-row">
+                            <label for="newsletterButtonTextInput">Eerste info blok knop tekst</label>
+                            <input id="newsletterButtonTextInput" type="text" class="cms-input">
+                        </div>
+                        <div class="cms-form-row">
+                            <label for="newsletterButtonLinkInput">Eerste info blok knop link</label>
+                            <input id="newsletterButtonLinkInput" type="text" class="cms-input">
+                        </div>
+                        <div class="cms-homepage-preview-wrap">
+                            <span class="cms-homepage-preview-label">Preview</span>
+                            <div class="sidebar-box cms-homepage-preview-box" id="newsletterPreviewBox">
+                                <h3 id="newsletterPreviewTitle">Laden...</h3>
+                                <p id="newsletterPreviewText">Laden...</p>
+                                <a id="newsletterPreviewButton" class="btn-blue" href="#">Laden...</a>
+                            </div>
+                        </div>
                     </div>
-                    <div class="cms-form-row">
-                        <label for="newsletterTextInput">Nieuwsbrief tekst</label>
-                        <input id="newsletterTextInput" type="text" class="cms-input">
+
+                    <div class="cms-homepage-card">
+                        <div class="cms-section-header">
+                            <div>
+                                <h3>Tweede info blok</h3>
+                                <p class="cms-section-note">Onderste blok in de homepage sidebar.</p>
+                            </div>
+                            <label class="cms-homepage-toggle">
+                                <input id="workshopVisibleInput" type="checkbox">
+                                <span>Zichtbaar</span>
+                            </label>
+                        </div>
+                        <div class="cms-form-row">
+                            <label for="workshopTitleInput">Tweede info blok titel</label>
+                            <input id="workshopTitleInput" type="text" class="cms-input">
+                        </div>
+                        <div class="cms-form-row">
+                            <label for="workshopTextInput">Tweede info blok tekst</label>
+                            <input id="workshopTextInput" type="text" class="cms-input">
+                        </div>
+                        <div class="cms-form-row">
+                            <label for="workshopButtonTextInput">Tweede info blok knop tekst</label>
+                            <input id="workshopButtonTextInput" type="text" class="cms-input">
+                        </div>
+                        <div class="cms-form-row">
+                            <label for="workshopButtonLinkInput">Tweede info blok knop link</label>
+                            <input id="workshopButtonLinkInput" type="text" class="cms-input">
+                        </div>
+                        <div class="cms-homepage-preview-wrap">
+                            <span class="cms-homepage-preview-label">Preview</span>
+                            <div class="sidebar-box workshop-box cms-homepage-preview-box" id="workshopPreviewBox">
+                                <h3 id="workshopPreviewTitle">Laden...</h3>
+                                <p id="workshopPreviewText">Laden...</p>
+                                <a id="workshopPreviewButton" class="btn-blue" href="#">Laden...</a>
+                            </div>
+                        </div>
                     </div>
-                    <div class="cms-form-row">
-                        <label for="newsletterButtonTextInput">Nieuwsbrief knop tekst</label>
-                        <input id="newsletterButtonTextInput" type="text" class="cms-input">
-                    </div>
-                    <div class="cms-form-row">
-                        <label for="newsletterButtonLinkInput">Nieuwsbrief knop link</label>
-                        <input id="newsletterButtonLinkInput" type="text" class="cms-input">
-                    </div>
-                    <!-- HVLN
-                    <div class="cms-form-row">
-                        <label for="workshopTitleInput">Workshop titel</label>
-                        <input id="workshopTitleInput" type="text" class="cms-input">
-                    </div>
-                    <div class="cms-form-row">
-                        <label for="workshopTextInput">Workshop tekst</label>
-                        <input id="workshopTextInput" type="text" class="cms-input">
-                    </div>
-                    <div class="cms-form-row">
-                        <label for="workshopButtonTextInput">Workshop knop tekst</label>
-                        <input id="workshopButtonTextInput" type="text" class="cms-input">
-                    </div>
-                    <div class="cms-form-row">
-                        <label for="workshopButtonLinkInput">Workshop knop link</label>
-                        <input id="workshopButtonLinkInput" type="text" class="cms-input">
-                    </div>
-                    -->
                 </div>
                 <div class="cms-actions">
                     <button id="save-homepage-btn" class="cms-button">Opslaan</button>
                     <span id="homepage-status" class="cms-status"></span>
+                </div>
+
+                <div class="cms-homepage-card" style="margin-top: 16px;">
+                    <div class="cms-section-header">
+                        <div>
+                            <h3>Footer social media</h3>
+                            <p class="cms-section-note">Voeg social platformen toe. De footer op de homepage wordt automatisch hiermee gevuld.</p>
+                        </div>
+                    </div>
+                    <div class="cms-social-editor" id="socialLinksEditor">
+                        <div class="cms-social-inputs">
+                            <input id="socialPlatformInput" type="text" class="cms-input" placeholder="Platform (bv. TikTok)">
+                            <input id="socialLinkInput" type="text" class="cms-input" placeholder="Link (bv. https://tiktok.com/@naam)">
+                            <button id="add-social-link-btn" class="cms-button" type="button">Toevoegen</button>
+                        </div>
+                        <div id="social-links-list" class="cms-social-list"></div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div id="cms-tab-contact" class="cms-tab-content" style="display:none;">
+            <section id="cms-contact" class="cms-section">
+                <h2>Contact pagina</h2>
+                <p class="cms-section-note">De tekst en gegevens op de contactpagina instellen.</p>
+                <div class="cms-form-row">
+                    <label for="contactIntroInput">Intro tekst</label>
+                    <textarea id="contactIntroInput" class="cms-input" rows="4"></textarea>
+                </div>
+                <div class="cms-form-row">
+                    <label for="contactEmailInput">E-mail adres</label>
+                    <input id="contactEmailInput" type="text" class="cms-input">
+                </div>
+                <div class="cms-form-row">
+                    <label for="contactPhoneInput">Telefoonnummer</label>
+                    <input id="contactPhoneInput" type="text" class="cms-input">
+                </div>
+                <div class="cms-form-row">
+                    <label for="contactAddressInput">Adres</label>
+                    <textarea id="contactAddressInput" class="cms-input" rows="3"></textarea>
+                </div>
+                <div class="cms-actions">
+                    <button id="save-contact-btn" class="cms-button">Opslaan</button>
+                    <span id="contact-status" class="cms-status"></span>
                 </div>
             </section>
         </div>

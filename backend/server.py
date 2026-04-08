@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
+from html import escape
 import json
 import os
+import subprocess
 from functools import wraps
 
 from flask import Flask, jsonify, request, send_from_directory, session, redirect, url_for
@@ -154,6 +156,17 @@ def load_site_settings():
     data.setdefault('customGroups', [])
     data.setdefault('customCategories', [])
     data.setdefault('highlightedGroups', ['het klein nieuws', 'de miniatuurwereld'])
+    data.setdefault('newsletterVisible', True)
+    data.setdefault('workshopVisible', True)
+    data.setdefault('shopVisible', True)
+    data.setdefault('contactIntro', '')
+    data.setdefault('contactEmail', '')
+    data.setdefault('contactPhone', '')
+    data.setdefault('contactAddress', '')
+    data.setdefault('footerSocialLinks', [
+        {'label': 'Facebook', 'url': '#'},
+        {'label': 'Instagram', 'url': '#'}
+    ])
     return data
 
 
@@ -166,6 +179,125 @@ def get_public_base_url():
     if APP_BASE_URL:
         return APP_BASE_URL.rstrip('/')
     return request.host_url.rstrip('/')
+
+
+def load_article_file(article_id):
+    filepath = os.path.join(ARTICLES_DIR, f'{article_id}.json')
+    if not os.path.exists(filepath):
+        return None
+    with open(filepath, 'r', encoding='utf-8-sig') as file:
+        return json.load(file)
+
+
+def get_youtube_video_id(src):
+    value = (src or '').strip()
+    if not value:
+        return ''
+    try:
+        from urllib.parse import urlparse, parse_qs
+        parsed = urlparse(value)
+        host = parsed.netloc.lower()
+        path = parsed.path or ''
+        if 'youtube.com' in host:
+            if path == '/watch':
+                return (parse_qs(parsed.query).get('v') or [''])[0]
+            if path.startswith('/embed/'):
+                return path.replace('/embed/', '').split('/')[0]
+        if 'youtu.be' in host:
+            return path.replace('/', '').split('/')[0]
+    except Exception:
+        return ''
+    return ''
+
+
+def resolve_public_media_url(src):
+    value = (src or '').strip()
+    if not value:
+        return ''
+    if value.startswith('http://') or value.startswith('https://'):
+        return value
+    base = get_public_base_url()
+    if value.startswith('/'):
+        return f'{base}{value}'
+    return f'{base}/{value.lstrip("/")}'
+
+
+def get_article_share_image(article):
+    components = [item for item in (article.get('components') or []) if isinstance(item, dict)]
+    first_image = next((item for item in components if item.get('type') == 'image' and (item.get('src') or '').strip()), None)
+    first_video = next((item for item in components if item.get('type') == 'video' and (item.get('src') or '').strip()), None)
+    first_in_order = next((item for item in components if item.get('type') in ['image', 'video'] and (item.get('src') or '').strip()), None)
+    thumbnail = article.get('thumbnail') or {}
+
+    media_type = ''
+    media_src = ''
+    mode = (thumbnail.get('mode') or '').strip()
+    if mode == 'auto-first' and first_in_order:
+        media_type = first_in_order.get('type') or ''
+        media_src = first_in_order.get('src') or ''
+    elif mode == 'auto-video' and first_video:
+        media_type = 'video'
+        media_src = first_video.get('src') or ''
+    elif mode == 'auto-image' and first_image:
+        media_type = 'image'
+        media_src = first_image.get('src') or ''
+    elif mode in ['custom-url', 'upload'] and (thumbnail.get('src') or '').strip():
+        media_type = 'video' if thumbnail.get('kind') == 'video' else 'image'
+        media_src = thumbnail.get('src') or ''
+    elif first_in_order:
+        media_type = first_in_order.get('type') or ''
+        media_src = first_in_order.get('src') or ''
+
+    if media_type == 'video':
+        yt_id = get_youtube_video_id(media_src)
+        if yt_id:
+            return f'https://img.youtube.com/vi/{yt_id}/hqdefault.jpg'
+    if media_src:
+        return resolve_public_media_url(media_src)
+    return f'{get_public_base_url()}/img/studiomalem_header.png'
+
+
+def get_article_share_description(article):
+    text_component = next(
+        (item for item in (article.get('components') or []) if isinstance(item, dict) and item.get('type') == 'text' and (item.get('content') or '').strip()),
+        None
+    )
+    if text_component:
+        description = ' '.join(str(text_component.get('content') or '').split())
+        return description[:197] + '...' if len(description) > 200 else description
+    title = (article.get('title') or 'Artikel').strip()
+    return f'Lees {title} op Studio Malem.'
+
+
+def build_article_share_meta(article):
+    title = escape((article.get('title') or 'Artikel').strip())
+    url = escape(get_article_share_url(article))
+    image = escape(get_article_share_image(article))
+    description = escape(get_article_share_description(article))
+    return f'''<meta name="description" content="{description}">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Studio Malem">
+    <meta property="og:locale" content="nl_BE">
+    <meta property="og:title" content="{title}">
+    <meta property="og:description" content="{description}">
+    <meta property="og:url" content="{url}">
+    <meta property="og:image" content="{image}">
+    <meta property="og:image:secure_url" content="{image}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="{title}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="{url}">
+    <meta name="twitter:title" content="{title}">
+    <meta name="twitter:description" content="{description}">
+    <meta name="twitter:image" content="{image}">'''
+
+
+def get_article_share_url(article):
+    article_id = (article.get('id') or '').strip()
+    if not article_id:
+        return get_public_base_url()
+    return f'{get_public_base_url()}/article/{article_id}'
 
 
 def stripe_is_ready():
@@ -301,13 +433,48 @@ def create_article():
 
 @app.route('/api/articles/<article_id>', methods=['GET'])
 def get_article(article_id):
-    filepath = os.path.join(ARTICLES_DIR, f'{article_id}.json')
-    if os.path.exists(filepath):
-        try:
-            with open(filepath, 'r', encoding='utf-8-sig') as file:
-                return jsonify(json.load(file))
-        except Exception as error:
-            return jsonify({'error': str(error)}), 500
+    try:
+        article = load_article_file(article_id)
+        if article is not None:
+            return jsonify(article)
+    except Exception as error:
+        return jsonify({'error': str(error)}), 500
+
+
+@app.route('/api/cms/deploy', methods=['POST'])
+def cms_deploy_server():
+    if 'cms_authenticated' not in session or not session['cms_authenticated']:
+        return jsonify({'error': 'Niet geauthenticeerd'}), 401
+
+    if os.name != 'posix':
+        return jsonify({'error': 'Deploy via setup_vps.sh is alleen beschikbaar op Linux/VPS.'}), 400
+
+    repo_root = os.path.abspath(os.path.join(BASE_DIR, '..'))
+    script_path = os.path.join(repo_root, 'setup_vps.sh')
+    if not os.path.exists(script_path):
+        return jsonify({'error': 'setup_vps.sh niet gevonden.'}), 404
+
+    log_path = os.path.join(repo_root, 'deploy.log')
+
+    try:
+        log_file = open(log_path, 'a', encoding='utf-8')
+        log_file.write(f'\n=== Deploy gestart via CMS op {datetime.now().isoformat()} ===\n')
+        log_file.flush()
+        subprocess.Popen(
+            ['bash', script_path],
+            cwd=repo_root,
+            stdout=log_file,
+            stderr=subprocess.STDOUT,
+            start_new_session=True
+        )
+    except Exception as error:
+        return jsonify({'error': f'Kon deploy niet starten: {error}'}), 500
+
+    return jsonify({
+        'success': True,
+        'message': 'Deploy gestart. setup_vps.sh draait nu op de achtergrond en zal git sync + herstart uitvoeren.',
+        'logPath': log_path
+    })
     return jsonify({'error': 'Article not found'}), 404
 
 
@@ -504,6 +671,35 @@ def patch_taxonomy_group(group_name):
     return jsonify({'success': True, 'name': name, 'highlighted': should_highlight})
 
 
+@app.route('/api/taxonomies/groups/<path:group_name>/rename', methods=['POST'])
+def rename_taxonomy_group(group_name):
+    source = (group_name or '').strip()
+    target = (parse_json_body().get('name') or '').strip()
+    if not source:
+        return jsonify({'error': 'Group naam ontbreekt.'}), 400
+    if source == 'standaard':
+        return jsonify({'error': 'De groep standaard kan niet hernoemd worden.'}), 400
+    if not target:
+        return jsonify({'error': 'Nieuwe group naam is verplicht.'}), 400
+
+    changed = article_manager.rename_group(source, target)
+
+    settings = load_site_settings()
+    custom_groups = [str(item).strip() for item in settings.get('customGroups', []) if str(item).strip()]
+    highlighted = [str(item).strip() for item in settings.get('highlightedGroups', []) if str(item).strip()]
+
+    custom_groups = [target if item == source else item for item in custom_groups]
+    highlighted = [target if item == source else item for item in highlighted]
+    if source not in custom_groups and target not in custom_groups:
+        custom_groups.append(target)
+
+    settings['customGroups'] = sorted(set(custom_groups))
+    settings['highlightedGroups'] = sorted(set(highlighted))
+    save_site_settings(settings)
+
+    return jsonify({'success': True, 'oldName': source, 'name': target, 'updatedArticles': changed})
+
+
 @app.route('/api/taxonomies/groups/<path:group_name>', methods=['DELETE'])
 def delete_taxonomy_group(group_name):
     name = (group_name or '').strip()
@@ -563,6 +759,28 @@ def delete_taxonomy_category(category_name):
     return jsonify({'success': True, 'name': name, 'updatedArticles': changed})
 
 
+@app.route('/api/taxonomies/categories/<path:category_name>/rename', methods=['POST'])
+def rename_taxonomy_category(category_name):
+    source = (category_name or '').strip()
+    target = (parse_json_body().get('name') or '').strip()
+    if not source:
+        return jsonify({'error': 'Categorie naam ontbreekt.'}), 400
+    if not target:
+        return jsonify({'error': 'Nieuwe categorie naam is verplicht.'}), 400
+
+    changed = article_manager.rename_category(source, target)
+
+    settings = load_site_settings()
+    custom_categories = [str(item).strip() for item in settings.get('customCategories', []) if str(item).strip()]
+    custom_categories = [target if item == source else item for item in custom_categories]
+    if source not in custom_categories and target not in custom_categories:
+        custom_categories.append(target)
+    settings['customCategories'] = sorted(set(custom_categories))
+    save_site_settings(settings)
+
+    return jsonify({'success': True, 'oldName': source, 'name': target, 'updatedArticles': changed})
+
+
 @app.route('/api/site', methods=['GET'])
 def get_site_settings():
     return jsonify(load_site_settings())
@@ -572,15 +790,36 @@ def get_site_settings():
 def update_site_settings():
     data = parse_json_body()
     current = load_site_settings()
+    incoming_social_links = data.get('footerSocialLinks', current.get('footerSocialLinks', []))
+    if not isinstance(incoming_social_links, list):
+        incoming_social_links = []
+    sanitized_social_links = []
+    for item in incoming_social_links:
+        if not isinstance(item, dict):
+            continue
+        label = str(item.get('label', '')).strip()
+        url = str(item.get('url', '')).strip()
+        if not label or not url:
+            continue
+        sanitized_social_links.append({'label': label, 'url': url})
+
     current.update({
         'newsletterTitle': data.get('newsletterTitle', current.get('newsletterTitle')),
         'newsletterText': data.get('newsletterText', current.get('newsletterText')),
         'newsletterButtonText': data.get('newsletterButtonText', current.get('newsletterButtonText')),
         'newsletterButtonLink': data.get('newsletterButtonLink', current.get('newsletterButtonLink')),
+        'newsletterVisible': data.get('newsletterVisible', current.get('newsletterVisible', True)),
         'workshopTitle': data.get('workshopTitle', current.get('workshopTitle')),
         'workshopText': data.get('workshopText', current.get('workshopText')),
         'workshopButtonText': data.get('workshopButtonText', current.get('workshopButtonText')),
-        'workshopButtonLink': data.get('workshopButtonLink', current.get('workshopButtonLink'))
+        'workshopButtonLink': data.get('workshopButtonLink', current.get('workshopButtonLink')),
+        'workshopVisible': data.get('workshopVisible', current.get('workshopVisible', True)),
+        'shopVisible': data.get('shopVisible', current.get('shopVisible', True)),
+        'contactIntro': data.get('contactIntro', current.get('contactIntro', '')),
+        'contactEmail': data.get('contactEmail', current.get('contactEmail', '')),
+        'contactPhone': data.get('contactPhone', current.get('contactPhone', '')),
+        'contactAddress': data.get('contactAddress', current.get('contactAddress', '')),
+        'footerSocialLinks': sanitized_social_links
     })
     save_site_settings(current)
     return jsonify(current)
@@ -996,6 +1235,11 @@ def serve_shop():
     return send_from_directory(FRONTEND_DIR, 'shop.html')
 
 
+@app.route('/contact')
+def serve_contact():
+    return send_from_directory(FRONTEND_DIR, 'contact.html')
+
+
 @app.route('/cart')
 def serve_cart():
     return send_from_directory(FRONTEND_DIR, 'cart.html')
@@ -1044,7 +1288,18 @@ def serve_cms_product_edit():
 
 @app.route('/article/<article_id>')
 def serve_article(article_id):
-    return send_from_directory(FRONTEND_DIR, 'article.html')
+    article = load_article_file(article_id)
+    if article is None:
+        return send_from_directory(FRONTEND_DIR, 'article.html')
+
+    article_html_path = os.path.join(FRONTEND_DIR, 'article.html')
+    with open(article_html_path, 'r', encoding='utf-8') as file:
+        html = file.read()
+
+    safe_title = escape((article.get('title') or 'Artikel').strip())
+    html = html.replace('<title>Artikel</title>', f'<title>{safe_title}</title>')
+    html = html.replace('<!-- ARTICLE_SHARE_META -->', build_article_share_meta(article))
+    return html
 
 
 @app.route('/images/<path:filename>')

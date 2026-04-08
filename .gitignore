@@ -30,3 +30,6 @@ backend/.env
 
 # Articles content (managed via CMS, not tracked in git)
 backend/articles/
+/backend/articles
+backend/site_settings.json
+backend/site_settings.json

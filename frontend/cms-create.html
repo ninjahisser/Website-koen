@@ -86,13 +86,63 @@
         }
 
         .cms-create-page .cms-form-row > label {
-            display: block;
+            display: flex;
+            align-items: center;
+            gap: 6px;
             margin-bottom: 6px;
             font-size: 12px;
             text-transform: uppercase;
             letter-spacing: 0.04em;
             color: #4e6660;
             font-weight: 700;
+        }
+
+        .cms-field-help {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            border-radius: 999px;
+            border: 1px solid #86a99d;
+            color: #2d5f4f;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1;
+            cursor: help;
+            background: #eef5f2;
+            text-transform: none;
+        }
+
+        .cms-field-help::after {
+            content: attr(data-help);
+            position: absolute;
+            left: 0;
+            top: calc(100% + 8px);
+            min-width: 220px;
+            max-width: 320px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            background: #1f3930;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: normal;
+            line-height: 1.35;
+            text-transform: none;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(2px);
+            transition: opacity 120ms ease, transform 120ms ease;
+            z-index: 30;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+        }
+
+        .cms-field-help:hover::after,
+        .cms-field-help:focus-visible::after {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         .cms-create-page .cms-input,
@@ -221,20 +271,21 @@
         <div id="create-status" class="cms-status"></div>
         <form id="create-form" class="cms-form">
             <div class="cms-form-row">
-                <label for="title">Titel</label>
+                <label for="title">Titel <span class="cms-field-help" tabindex="0" data-help="De hoofdtitel van het artikel zoals die op de website verschijnt.">?</span></label>
                 <input id="title" name="title" type="text" class="cms-input" required>
             </div>
             <div class="cms-form-row">
-                <label for="category">Categorie</label>
-                <input id="category" name="category" type="text" class="cms-input">
+                <label for="category">Categorie <span class="cms-field-help" tabindex="0" data-help="Kies een bestaande categorie of maak een nieuwe categorie aan.">?</span></label>
+                <select id="category" name="category" class="cms-input"></select>
+                <input id="new-category" name="new-category" type="text" class="cms-input cms-input-muted" placeholder="Nieuwe categorie naam" style="display: none; margin-top: 8px;">
             </div>
             <div class="cms-form-row">
-                <label for="group">Group</label>
+                <label for="group">Group <span class="cms-field-help" tabindex="0" data-help="Groep bepaalt in welk blok op de homepage het artikel terechtkomt.">?</span></label>
                 <select id="group" name="group" class="cms-input"></select>
                 <input id="new-group" name="new-group" type="text" class="cms-input cms-input-muted" placeholder="Nieuwe groep naam" style="display: none;">
             </div>
             <div class="cms-form-row">
-                <label for="size">Size</label>
+                <label for="size">Size <span class="cms-field-help" tabindex="0" data-help="klein: rechterkolom, groot: hoofdelement, tekst: tekstkaart zonder media.">?</span></label>
                 <select id="size" name="size" class="cms-input">
                     <option value="klein">klein</option>
                     <option value="groot">groot</option>
@@ -242,7 +293,7 @@
                 </select>
             </div>
             <div class="cms-form-row">
-                <label for="thumbnail-mode">Thumbnail</label>
+                <label for="thumbnail-mode">Thumbnail <span class="cms-field-help" tabindex="0" data-help="Bepaalt welke afbeelding/video als preview gebruikt wordt op kaarten en lijsten.">?</span></label>
                 <select id="thumbnail-mode" class="cms-input">
                     <option value="auto-first" selected>Automatisch: eerste element (foto of video)</option>
                     <option value="auto-image">Automatisch: eerste afbeelding</option>
@@ -252,27 +303,27 @@
                 </select>
             </div>
             <div class="cms-form-row" id="thumbnail-kind-row" style="display:none;">
-                <label for="thumbnail-kind">Thumbnail type</label>
+                <label for="thumbnail-kind">Thumbnail type <span class="cms-field-help" tabindex="0" data-help="Kies of de thumbnail een afbeelding of video is.">?</span></label>
                 <select id="thumbnail-kind" class="cms-input">
                     <option value="image">Afbeelding</option>
                     <option value="video">Video</option>
                 </select>
             </div>
             <div class="cms-form-row" id="thumbnail-url-row" style="display:none;">
-                <label for="thumbnail-url">Thumbnail URL</label>
+                <label for="thumbnail-url">Thumbnail URL <span class="cms-field-help" tabindex="0" data-help="Plak hier een directe link naar de thumbnail-media.">?</span></label>
                 <input id="thumbnail-url" type="text" class="cms-input" placeholder="https://...">
             </div>
             <div class="cms-form-row" id="thumbnail-upload-row" style="display:none;">
-                <label for="thumbnail-upload">Thumbnail bestand uploaden</label>
+                <label for="thumbnail-upload">Thumbnail bestand uploaden <span class="cms-field-help" tabindex="0" data-help="Upload een aparte thumbnail die los staat van de artikelcomponenten.">?</span></label>
                 <input id="thumbnail-upload" type="file" class="cms-input" accept="image/*,video/*">
                 <div id="thumbnail-upload-status" style="margin-top: 8px; font-size: 12px; color: #666;"></div>
             </div>
             <div class="cms-form-row">
-                <label>Thumbnail preview</label>
+                <label>Thumbnail preview <span class="cms-field-help" tabindex="0" data-help="Hier zie je live welke thumbnail momenteel actief is.">?</span></label>
                 <div id="thumbnail-preview" style="width: 100%;"></div>
             </div>
             <div class="cms-form-row">
-                <label>Components</label>
+                <label>Components <span class="cms-field-help" tabindex="0" data-help="Voeg tekst, afbeeldingen, video of audio toe. De volgorde bepaalt hoe het artikel wordt opgebouwd.">?</span></label>
                 <div class="components-editor">
                     <div class="components-toolbar">
                         <button type="button" class="cms-button cms-button-secondary" data-add="text">Tekst</button>
@@ -284,7 +335,8 @@
                 </div>
             </div>
             <div class="cms-actions">
-                <button type="submit" class="cms-button">Aanmaken</button>
+                <button type="submit" class="cms-button">Opslaan</button>
+                <a id="preview-link" href="#" class="cms-button cms-button-small" target="_blank" rel="noopener">Preview</a>
                 <a href="/cms" class="cms-button cms-button-secondary">Annuleren</a>
             </div>
         </form>
