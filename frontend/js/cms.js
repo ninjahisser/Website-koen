@@ -1409,11 +1409,20 @@ document.addEventListener('DOMContentLoaded', () => {
                         'Content-Type': 'application/json'
                     }
                 });
-                const data = await response.json();
-                if (!response.ok) {
-                    throw new Error(data.error || 'Server stoppen mislukt');
+                const rawText = await response.text();
+                let data = null;
+                try {
+                    data = rawText ? JSON.parse(rawText) : null;
+                } catch (parseError) {
+                    data = null;
                 }
-                settingsStatus.textContent = data.message || 'Stop-actie gestart.';
+
+                if (!response.ok) {
+                    throw new Error((data && data.error) || 'Server stoppen mislukt');
+                }
+
+                settingsStatus.textContent = (data && data.message)
+                    || 'Stop-actie gestart. De server wordt nu afgesloten.';
                 settingsStatus.className = 'cms-status cms-status-success';
             } catch (error) {
                 settingsStatus.textContent = error.message || 'Fout bij stoppen van server';

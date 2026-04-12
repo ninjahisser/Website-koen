@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from html import escape
 import json
 import os
+import shlex
 import shutil
 import subprocess
 import time
@@ -542,40 +543,25 @@ def cms_stop_server():
         return jsonify({'error': 'Server stoppen via CMS is alleen beschikbaar op Linux/VPS.'}), 400
 
     app_name = (os.getenv('APP_NAME') or 'studiomalem').strip() or 'studiomalem'
-    command_attempts = [
-        ['systemctl', 'stop', app_name],
-        ['sudo', 'systemctl', 'stop', app_name],
-        ['pkill', '-f', 'gunicorn.*server:app']
-    ]
+    safe_app_name = shlex.quote(app_name)
+    stop_cmd = (
+        f"sleep 1; "
+        f"(systemctl stop {safe_app_name} || sudo systemctl stop {safe_app_name} || pkill -f 'gunicorn.*server:app') "
+        f">>/tmp/cms-stop-server.log 2>&1"
+    )
 
-    failure_details = []
+    try:
+        subprocess.Popen(
+            ['sh', '-c', stop_cmd],
+            start_new_session=True
+        )
+    except Exception as error:
+        return jsonify({'error': f'Kon stop-actie niet starten: {error}'}), 500
 
-    for command in command_attempts:
-        try:
-            result = subprocess.run(
-                command,
-                capture_output=True,
-                text=True,
-                timeout=20,
-                check=False
-            )
-            if result.returncode == 0:
-                command_text = ' '.join(command)
-                return jsonify({
-                    'success': True,
-                    'message': f'Server stop-actie uitgevoerd via: {command_text}'
-                })
-
-            stderr_text = (result.stderr or result.stdout or '').strip()
-            if stderr_text:
-                failure_details.append(f"{' '.join(command)} -> {stderr_text}")
-            else:
-                failure_details.append(f"{' '.join(command)} -> exitcode {result.returncode}")
-        except Exception as error:
-            failure_details.append(f"{' '.join(command)} -> {error}")
-
-    details = '; '.join(failure_details[:3])
-    return jsonify({'error': f'Kon server niet stoppen. {details}'}), 500
+    return jsonify({
+        'success': True,
+        'message': 'Stop-actie gestart. De server wordt binnen enkele seconden volledig gestopt.'
+    })
 
 
 @app.route('/api/articles/<article_id>', methods=['PUT'])
