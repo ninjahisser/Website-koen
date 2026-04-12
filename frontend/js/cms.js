@@ -1418,7 +1418,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 if (!response.ok) {
-                    throw new Error((data && data.error) || 'Server stoppen mislukt');
+                    const detail = (data && data.error)
+                        || (rawText ? rawText.slice(0, 180) : '')
+                        || `HTTP ${response.status}`;
+                    throw new Error(`Server stoppen mislukt: ${detail}`);
                 }
 
                 settingsStatus.textContent = (data && data.message)

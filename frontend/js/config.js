@@ -7,6 +7,9 @@ const PRODUCTION_API_URL = `${window.location.origin}/api`;
 
 const API_BASE_URL = isLocalHost ? LOCAL_API_URL : PRODUCTION_API_URL;
 
+// Backward compatibility for older CMS page checks.
+const USE_LOCAL_API = isLocalHost;
+
 const LOCAL_BACKEND_URL = 'http://127.0.0.1:5000';
 const PRODUCTION_BACKEND_URL = window.location.origin;
 const BACKEND_BASE_URL = isLocalHost ? LOCAL_BACKEND_URL : PRODUCTION_BACKEND_URL;
