@@ -120,6 +120,15 @@ def parse_json_body():
     return request.get_json(silent=True) or {}
 
 
+def get_request_visitor_id():
+    forwarded_for = request.headers.get('X-Forwarded-For', '')
+    if forwarded_for:
+        first_ip = forwarded_for.split(',')[0].strip()
+        if first_ip:
+            return first_ip
+    return (request.remote_addr or '').strip()
+
+
 def require_cms_auth(f):
     """Decorator to require CMS authentication."""
     @wraps(f)
@@ -452,6 +461,28 @@ def get_article(article_id):
     try:
         article = load_article_file(article_id)
         if article is not None:
+            should_track = str(request.args.get('track', '')).strip() == '1'
+            if should_track:
+                try:
+                    views = load_views()
+                    now = datetime.now().isoformat()
+                    visitor_id = get_request_visitor_id()
+                    if article_id not in views:
+                        views[article_id] = {'views': 0, 'clicks': 0, 'history': []}
+
+                    views[article_id]['views'] = int(views[article_id].get('views', 0) or 0) + 1
+                    views[article_id]['clicks'] = int(views[article_id].get('clicks', 0) or 0) + 1
+
+                    view_entry = {'type': 'view', 'timestamp': now}
+                    click_entry = {'type': 'click', 'timestamp': now}
+                    if visitor_id:
+                        view_entry['visitorId'] = visitor_id
+                        click_entry['visitorId'] = visitor_id
+                    views[article_id]['history'].append(view_entry)
+                    views[article_id]['history'].append(click_entry)
+                    save_views(views)
+                except Exception as tracking_error:
+                    print(f'WAARSCHUWING: tracking mislukt voor artikel {article_id}: {tracking_error}')
             return jsonify(article)
     except Exception as error:
         return jsonify({'error': str(error)}), 500

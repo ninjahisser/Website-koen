@@ -260,19 +260,11 @@ async function loadArticle() {
     }
 
     try {
-        const res = await fetch(`${API_BASE_URL}/articles/${encodeURIComponent(articleId)}`);
+        const res = await fetch(`${API_BASE_URL}/articles/${encodeURIComponent(articleId)}?track=1`);
         if (!res.ok) {
             throw new Error('Artikel niet gevonden');
         }
         const article = await res.json();
-        fetch(`${API_BASE_URL}/articles/${encodeURIComponent(articleId)}/click`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ clientId: getPresenceClientId() }),
-            keepalive: true
-        }).catch(() => {
-            // Do not block rendering if tracking fails.
-        });
         await loadHeaderCategories(getCategoryValue(article));
         const dateText = formatDate(article.created_at);
         if (shareSlotEl) {
