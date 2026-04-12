@@ -261,9 +261,29 @@ html, body {
 
 .stats-cards {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 12px;
     margin-bottom: 18px;
+}
+
+.stats-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.stats-control-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.stats-control-item span {
+    font-size: 12px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
 }
 
 .stats-card {
@@ -327,6 +347,11 @@ html, body {
 .views-title {
     font-size: 13px;
     color: var(--dark);
+}
+
+.views-id {
+    color: #777;
+    font-size: 12px;
 }
 
 .views-bar {
@@ -945,7 +970,8 @@ html, body {
     .article-top-actions {
         position: static;
         width: 100%;
-        margin: 12px 0 16px;
+        margin: 8px 0 10px;
+        gap: 6px;
     }
 
     .article-hero {
@@ -953,12 +979,18 @@ html, body {
     }
 
     .article-header {
-        padding: 20px 20px 0;
+        padding: 14px 14px 0;
     }
 
     .article-body {
-        padding: 16px 20px 28px;
+        padding: 10px 14px 16px;
         max-width: 100%;
+    }
+
+    .article-media,
+    .article-video-embed,
+    .article-audio {
+        margin: 12px 0;
     }
 
     .article-share {
@@ -2152,6 +2184,177 @@ footer {
     .article-card.small-item {
         min-height: 0;
         height: auto;
+    }
+}
+
+@media (max-width: 900px) {
+    .home-page .content-wrapper {
+        padding: 14px 12px 0;
+    }
+
+    .hero-content {
+        gap: 16px;
+    }
+
+    .hero-image {
+        height: 260px;
+    }
+
+    .hero-title {
+        font-size: 22px;
+        left: 14px;
+        bottom: 14px;
+        max-width: calc(100% - 28px);
+    }
+
+    .layout-row {
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .main-column {
+        order: 1;
+    }
+
+    .klein-column,
+    .mini-column {
+        order: 2;
+        flex: 1 1 auto;
+        margin-top: 0;
+        gap: 16px;
+    }
+
+    .side-column .klein-nieuws-section.stagger {
+        margin-top: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .navbar {
+        padding-top: 8px;
+    }
+
+    .logo_malem img {
+        height: 56px !important;
+    }
+
+    .nav-submenu {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        overflow-x: visible;
+        -webkit-overflow-scrolling: auto;
+        padding: 8px 10px;
+        gap: 8px 12px;
+    }
+
+    .nav-category-btn {
+        white-space: normal;
+        font-size: 11px;
+        line-height: 1.15;
+    }
+
+    .article-page {
+        margin: 0 auto 24px;
+        padding: 0 8px;
+    }
+
+    .article-page .article-title {
+        font-size: 2rem;
+        line-height: 1.2;
+    }
+
+    .article-content {
+        border: none;
+    }
+
+    .article-back-btn,
+    .article-share-toggle {
+        text-align: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .home-page .content-wrapper {
+        padding: 8px 8px 0;
+        margin: 0;
+    }
+
+    .hero-section {
+        margin-bottom: 12px;
+    }
+
+    .hero-content {
+        gap: 10px;
+    }
+
+    .hero-image {
+        height: 220px;
+    }
+
+    .hero-sidebar {
+        gap: 12px;
+    }
+
+    .sidebar-box {
+        padding: 14px;
+    }
+
+    .layout-row,
+    .standaard-grid,
+    .standaard-row,
+    .standaard-row.groot-row,
+    .standaard-row.small-stack-3-row,
+    .small-stack {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 12px;
+    }
+
+    .klein-column,
+    .mini-column,
+    .main-column {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .standaard-row > *,
+    .small-stack > * {
+        width: 100%;
+        max-width: 100% !important;
+    }
+
+    .article-card,
+    .article-card.large-item,
+    .article-card.small-item,
+    .article-card-text.large-item,
+    .side-column .klein-nieuws-grid-dynamic .article-card {
+        width: 100%;
+        max-width: 100% !important;
+        aspect-ratio: 16 / 9;
+        min-height: 0;
+        max-height: none;
+        height: auto;
+    }
+
+    .article-card .article-image,
+    .article-card.large-item .article-image,
+    .article-card.small-item .article-image {
+        aspect-ratio: 16 / 9;
+        max-height: none;
+    }
+
+    .article-card .article-title,
+    .article-card.small-item .article-title {
+        font-size: 1.85rem;
+        line-height: 1.15;
+    }
+
+    footer {
+        margin-top: 26px;
+    }
+
+    .footer-content {
+        padding: 20px 14px;
     }
 }
 

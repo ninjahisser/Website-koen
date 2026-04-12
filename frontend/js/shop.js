@@ -6,6 +6,9 @@ function animateCartButton() {
     void btn.offsetWidth;
     btn.classList.add('cart-animate');
 }
+
+startPresenceTracking('shop');
+
 const shopStatusEl = document.getElementById('shop-status');
 const productsGridEl = document.getElementById('products-grid');
 

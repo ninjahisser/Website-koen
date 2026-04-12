@@ -1,5 +1,7 @@
 
 
+startPresenceTracking('article');
+
 const loadingEl = document.getElementById('article-loading');
 const errorEl = document.getElementById('article-error');
 const contentEl = document.getElementById('article-content');
@@ -263,6 +265,14 @@ async function loadArticle() {
             throw new Error('Artikel niet gevonden');
         }
         const article = await res.json();
+        fetch(`${API_BASE_URL}/articles/${encodeURIComponent(articleId)}/click`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ clientId: getPresenceClientId() }),
+            keepalive: true
+        }).catch(() => {
+            // Do not block rendering if tracking fails.
+        });
         await loadHeaderCategories(getCategoryValue(article));
         const dateText = formatDate(article.created_at);
         if (shareSlotEl) {

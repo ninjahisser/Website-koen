@@ -1,4 +1,6 @@
 (async function () {
+    startPresenceTracking('contact');
+
     try {
         const res = await fetch(`${API_BASE_URL}/site`);
         if (!res.ok) throw new Error('Instellingen niet gevonden');

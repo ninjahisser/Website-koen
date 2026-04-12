@@ -6,6 +6,8 @@ class ArticleLoader {
     }
 
     async loadGroups() {
+startPresenceTracking('home');
+
         try {
             const response = await fetch(`${this.apiUrl}/groups`);
             if (!response.ok) {

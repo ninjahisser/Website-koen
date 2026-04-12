@@ -108,6 +108,8 @@ function getArticleThumbnailPreview(article) {
 
 let isArticleOrderDirty = false;
 let autoSaveOrderTimer = null;
+let currentStatsRange = 'all';
+let currentStatsSort = 'clicks_desc';
 
 function markArticleOrderDirty(dirty) {
     isArticleOrderDirty = !!dirty;
@@ -200,44 +202,105 @@ async function loadStats() {
     const statsContainer = document.getElementById('stats-container');
     statsContainer.innerHTML = 'Statistieken laden...';
     try {
-        const res = await fetch(`${API_BASE_URL}/stats`);
+        const query = new URLSearchParams({
+            range: currentStatsRange,
+            sort: currentStatsSort
+        });
+        const res = await fetch(`${API_BASE_URL}/stats?${query.toString()}`);
         const stats = await res.json();
-        const views = stats.viewsPerArticle || [];
-        const maxViews = Math.max(1, ...views.map(article => article.views || 0));
+        currentStatsRange = stats.selectedRange || currentStatsRange;
+        currentStatsSort = stats.selectedSort || currentStatsSort;
+        const articlesStats = stats.viewsPerArticle || [];
+        const maxClicks = Math.max(1, ...articlesStats.map(article => article.clicks || article.views || 0));
+        const activeUsersNow = Number(stats.activeUsersNow || 0);
+        const uniqueVisitors = Number(stats.uniqueVisitors || 0);
+        const totalClicks = Number(stats.totalClicks || stats.totalViews || 0);
+        const rangeLabelMap = {
+            all: 'altijd',
+            '30d': 'laatste 30 dagen',
+            '7d': 'laatste 7 dagen',
+            '1d': 'laatste 24 uur',
+            '1h': 'laatste uur'
+        };
+        const rangeLabel = rangeLabelMap[currentStatsRange] || 'geselecteerde periode';
         statsContainer.innerHTML = `
             <div class="stats-cards">
                 <div class="stats-card">
-                    <div class="stats-label">Meeste bezoekers (laatste 7 dagen)</div>
-                    <div class="stats-value">${stats.mostVisited.title} <span>(${stats.mostVisited.views})</span></div>
+                    <div class="stats-label">Nu op website</div>
+                    <div class="stats-value">${activeUsersNow}</div>
                 </div>
                 <div class="stats-card">
-                    <div class="stats-label">Totaal aantal bezoekers</div>
-                    <div class="stats-value">${stats.totalViews}</div>
+                    <div class="stats-label">Unieke bezoekers (${rangeLabel})</div>
+                    <div class="stats-value">${uniqueVisitors}</div>
                 </div>
                 <div class="stats-card">
-                    <div class="stats-label">Meest aangeklikte artikel</div>
+                    <div class="stats-label">Totaal clicks (${rangeLabel})</div>
+                    <div class="stats-value">${totalClicks}</div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-label">Top artikel (${rangeLabel})</div>
                     <div class="stats-value">${stats.mostClicked.title} <span>(${stats.mostClicked.clicks})</span></div>
                 </div>
             </div>
             <div class="views-section">
-                <h3>Views per artikel</h3>
+                <div class="stats-controls">
+                    <label class="stats-control-item" for="stats-range-select">
+                        <span>Periode</span>
+                        <select id="stats-range-select" class="cms-input">
+                            <option value="all" ${currentStatsRange === 'all' ? 'selected' : ''}>Altijd</option>
+                            <option value="30d" ${currentStatsRange === '30d' ? 'selected' : ''}>Laatste 30 dagen</option>
+                            <option value="7d" ${currentStatsRange === '7d' ? 'selected' : ''}>Laatste 7 dagen</option>
+                            <option value="1d" ${currentStatsRange === '1d' ? 'selected' : ''}>Laatste 24 uur</option>
+                            <option value="1h" ${currentStatsRange === '1h' ? 'selected' : ''}>Laatste uur</option>
+                        </select>
+                    </label>
+                    <label class="stats-control-item" for="stats-sort-select">
+                        <span>Sorteren op</span>
+                        <select id="stats-sort-select" class="cms-input">
+                            <option value="clicks_desc" ${currentStatsSort === 'clicks_desc' ? 'selected' : ''}>Clicks: hoog naar laag</option>
+                            <option value="clicks_asc" ${currentStatsSort === 'clicks_asc' ? 'selected' : ''}>Clicks: laag naar hoog</option>
+                            <option value="title_asc" ${currentStatsSort === 'title_asc' ? 'selected' : ''}>Titel: A-Z</option>
+                            <option value="title_desc" ${currentStatsSort === 'title_desc' ? 'selected' : ''}>Titel: Z-A</option>
+                        </select>
+                    </label>
+                </div>
+                <h3>Clicks per artikel (${rangeLabel})</h3>
+                <p class="cms-section-note">Toont alle artikelen van de site (${articlesStats.length} totaal), ook met 0 clicks.</p>
                 <div class="views-list">
-                    ${views.map(article => {
-                        const safeViews = article.views || 0;
-                        const pct = Math.round((safeViews / maxViews) * 100);
+                    ${articlesStats.map((article, index) => {
+                        const safeClicks = article.clicks || article.views || 0;
+                        const pct = Math.round((safeClicks / maxClicks) * 100);
+                        const safeTitle = (article.title || '').trim() || '(zonder titel)';
+                        const safeId = (article.id || '').trim();
                         return `
                             <div class="views-item">
-                                <div class="views-title">${article.title}</div>
+                                <div class="views-title">${index + 1}. ${safeTitle}${safeId ? ` <span class="views-id">(${safeId})</span>` : ''}</div>
                                 <div class="views-bar">
                                     <div class="views-bar-fill" style="width:${pct}%"></div>
                                 </div>
-                                <div class="views-value">${safeViews}</div>
+                                <div class="views-value">${safeClicks}</div>
                             </div>
                         `;
                     }).join('')}
                 </div>
             </div>
         `;
+
+        const rangeSelect = document.getElementById('stats-range-select');
+        if (rangeSelect) {
+            rangeSelect.addEventListener('change', () => {
+                currentStatsRange = rangeSelect.value;
+                loadStats();
+            });
+        }
+
+        const sortSelect = document.getElementById('stats-sort-select');
+        if (sortSelect) {
+            sortSelect.addEventListener('change', () => {
+                currentStatsSort = sortSelect.value;
+                loadStats();
+            });
+        }
     } catch (error) {
         statsContainer.innerHTML = 'Fout bij laden van statistieken.';
     }
@@ -285,7 +348,7 @@ async function loadArticles() {
                     <hr class="cms-action-divider">
                     <button onclick="deleteArticle('${article.id}')">Verwijderen</button>
                 </div>
-                <span>Views: ${article.views} | Clicks: ${article.clicks}</span>
+                <span>Clicks: ${article.clicks || article.views || 0}</span>
             </div>
         `).join('');
         container.querySelectorAll('button[data-move-article]').forEach(btn => {
@@ -1035,6 +1098,7 @@ if (refreshOrdersBtn) {
 document.addEventListener('DOMContentLoaded', () => {
     // Tab functionaliteit voor alle tabs inclusief settings
     const tabBtns = document.querySelectorAll('.cms-tab-btn');
+    const cmsActiveTabStorageKey = 'cms_active_tab';
     const tabContents = {
         'cms-tab-orders': document.getElementById('cms-tab-orders'),
         'cms-tab-articles': document.getElementById('cms-tab-articles'),
@@ -1045,22 +1109,47 @@ document.addEventListener('DOMContentLoaded', () => {
         'cms-tab-homepage': document.getElementById('cms-tab-homepage'),
         'cms-tab-contact': document.getElementById('cms-tab-contact')
     };
+
+    const setActiveTab = (tab) => {
+        tabBtns.forEach(b => b.classList.remove('active'));
+        tabBtns.forEach(b => {
+            if (b.getAttribute('data-tab') === tab) {
+                b.classList.add('active');
+            }
+        });
+        Object.keys(tabContents).forEach(key => {
+            if (tabContents[key]) {
+                tabContents[key].style.display = (key === tab) ? '' : 'none';
+            }
+        });
+        try {
+            localStorage.setItem(cmsActiveTabStorageKey, tab);
+        } catch (error) {
+            // Ignore storage errors and continue with in-memory tab state.
+        }
+    };
+
     tabBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            tabBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
             const tab = btn.getAttribute('data-tab');
-            Object.keys(tabContents).forEach(key => {
-                if (tabContents[key]) {
-                    tabContents[key].style.display = (key === tab) ? '' : 'none';
-                }
-            });
+            setActiveTab(tab);
         });
     });
-    // Standaard: Artikelen tab actief
-    Object.keys(tabContents).forEach(key => {
-        tabContents[key].style.display = (key === 'cms-tab-articles') ? '' : 'none';
-    });
+
+    let initialTab = 'cms-tab-articles';
+    try {
+        const savedTab = localStorage.getItem(cmsActiveTabStorageKey);
+        if (
+            savedTab &&
+            tabContents[savedTab] &&
+            document.querySelector(`.cms-tab-btn[data-tab="${savedTab}"]`)
+        ) {
+            initialTab = savedTab;
+        }
+    } catch (error) {
+        initialTab = 'cms-tab-articles';
+    }
+    setActiveTab(initialTab);
 
     // Password toggle buttons
     const toggleBtns = document.querySelectorAll('.cms-toggle-pw-btn');
@@ -1310,4 +1399,5 @@ document.addEventListener('DOMContentLoaded', () => {
     loadHomepageSettings();
     loadContactSettings();
     loadOrders();
+    setInterval(loadStats, 30000);
 });

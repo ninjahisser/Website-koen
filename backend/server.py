@@ -4,6 +4,7 @@ import json
 import os
 import shutil
 import subprocess
+import time
 from functools import wraps
 
 from flask import Flask, jsonify, request, send_from_directory, session, redirect, url_for
@@ -69,6 +70,8 @@ ARTICLES_DIR = os.path.join(BASE_DIR, 'articles')
 PRODUCTS_DIR = os.path.join(BASE_DIR, 'products')
 VIEWS_FILE = os.path.join(BASE_DIR, 'views.json')
 SETTINGS_FILE = os.path.join(BASE_DIR, 'site_settings.json')
+PRESENCE_ACTIVE_SECONDS = 90
+presence_sessions = {}
 # BELANGRIJK: .env MOET EERST GELADEN WORDEN!
 
 STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', '').strip()
@@ -137,6 +140,18 @@ def load_views():
 def save_views(views):
     with open(VIEWS_FILE, 'w', encoding='utf-8') as file:
         json.dump(views, file, ensure_ascii=False, indent=2)
+
+
+def cleanup_presence_sessions():
+    now_ts = time.time()
+    stale_ids = [
+        client_id
+        for client_id, session_data in presence_sessions.items()
+        if (now_ts - float(session_data.get('last_seen', 0))) > PRESENCE_ACTIVE_SECONDS
+    ]
+    for client_id in stale_ids:
+        presence_sessions.pop(client_id, None)
+    return now_ts
 
 
 def load_site_settings():
@@ -530,52 +545,159 @@ def reset_single_article_order(article_id):
 
 @app.route('/api/articles/<article_id>/view', methods=['POST'])
 def add_view(article_id):
+    data = parse_json_body()
+    visitor_id = str(data.get('clientId') or request.remote_addr or '').strip()
     views = load_views()
     now = datetime.now().isoformat()
     if article_id not in views:
         views[article_id] = {'views': 0, 'clicks': 0, 'history': []}
     views[article_id]['views'] += 1
-    views[article_id]['history'].append({'type': 'view', 'timestamp': now})
+    history_entry = {'type': 'view', 'timestamp': now}
+    if visitor_id:
+        history_entry['visitorId'] = visitor_id
+    views[article_id]['history'].append(history_entry)
     save_views(views)
     return jsonify({'views': views[article_id]['views']})
 
 
 @app.route('/api/articles/<article_id>/click', methods=['POST'])
 def add_click(article_id):
+    data = parse_json_body()
+    visitor_id = str(data.get('clientId') or request.remote_addr or '').strip()
     views = load_views()
     now = datetime.now().isoformat()
     if article_id not in views:
         views[article_id] = {'views': 0, 'clicks': 0, 'history': []}
+    # Clicks are the primary metric; keep views in sync for backwards compatibility.
+    views[article_id]['views'] += 1
     views[article_id]['clicks'] += 1
-    views[article_id]['history'].append({'type': 'click', 'timestamp': now})
+    view_entry = {'type': 'view', 'timestamp': now}
+    click_entry = {'type': 'click', 'timestamp': now}
+    if visitor_id:
+        view_entry['visitorId'] = visitor_id
+        click_entry['visitorId'] = visitor_id
+    views[article_id]['history'].append(view_entry)
+    views[article_id]['history'].append(click_entry)
     save_views(views)
     return jsonify({'clicks': views[article_id]['clicks']})
+
+
+@app.route('/api/presence/ping', methods=['POST'])
+def presence_ping():
+    data = parse_json_body()
+    client_id = str(data.get('clientId', '')).strip()
+    page = str(data.get('page', '')).strip() or 'unknown'
+    if not client_id:
+        return jsonify({'error': 'clientId is verplicht'}), 400
+
+    now_ts = cleanup_presence_sessions()
+    presence_sessions[client_id] = {
+        'last_seen': now_ts,
+        'page': page
+    }
+    return jsonify({'success': True, 'activeUsersNow': len(presence_sessions)})
 
 
 @app.route('/api/stats', methods=['GET'])
 def get_stats():
     views = load_views()
     articles = article_manager.get_all_articles()
-    week_ago = datetime.now() - timedelta(days=7)
-    stats = {
-        'totalViews': sum(item.get('views', 0) for item in views.values()),
-        'mostVisited': {'title': '', 'views': 0},
-        'mostClicked': {'title': '', 'clicks': 0},
-        'viewsPerArticle': []
+    now_dt = datetime.now()
+    range_key = str(request.args.get('range', 'all')).strip().lower()
+    sort_key = str(request.args.get('sort', 'clicks_desc')).strip().lower()
+
+    range_map = {
+        'all': None,
+        '30d': timedelta(days=30),
+        '7d': timedelta(days=7),
+        '1d': timedelta(days=1),
+        '1h': timedelta(hours=1)
     }
+    if range_key not in range_map:
+        range_key = 'all'
+    cutoff = None if range_map[range_key] is None else (now_dt - range_map[range_key])
+
+    cleanup_presence_sessions()
+    stats = {
+        'totalClicks': 0,
+        'mostClicked': {'title': '', 'clicks': 0},
+        'viewsPerArticle': [],
+        'activeUsersNow': len(presence_sessions),
+        'uniqueVisitors': 0,
+        'selectedRange': range_key,
+        'selectedSort': sort_key
+    }
+
+    unique_visitor_ids = set()
+
     for article in articles:
         article_id = article['id']
         article_views = views.get(article_id, {'views': 0, 'clicks': 0, 'history': []})
-        stats['viewsPerArticle'].append({'title': article['title'], 'views': article_views['views']})
-        week_views = sum(
-            1
-            for item in article_views.get('history', [])
-            if item['type'] == 'view' and item['timestamp'] >= week_ago.isoformat()
-        )
-        if week_views > stats['mostVisited']['views']:
-            stats['mostVisited'] = {'title': article['title'], 'views': week_views}
-        if article_views['clicks'] > stats['mostClicked']['clicks']:
-            stats['mostClicked'] = {'title': article['title'], 'clicks': article_views['clicks']}
+        article_clicks_count = 0
+
+        if range_key == 'all':
+            article_clicks_count = int(article_views.get('clicks', 0) or 0)
+
+        for item in article_views.get('history', []):
+            event_type = str(item.get('type', '')).strip().lower()
+            if event_type not in ('view', 'click'):
+                continue
+
+            timestamp = item.get('timestamp')
+            event_dt = None
+            if timestamp:
+                try:
+                    event_dt = datetime.fromisoformat(str(timestamp))
+                except Exception:
+                    event_dt = None
+
+            if cutoff is not None and (event_dt is None or event_dt < cutoff):
+                continue
+
+            if range_key != 'all':
+                if event_type == 'click':
+                    article_clicks_count += 1
+
+            visitor_id = str(item.get('visitorId', '')).strip()
+            if visitor_id:
+                unique_visitor_ids.add(visitor_id)
+
+        stats['totalClicks'] += article_clicks_count
+        stats['viewsPerArticle'].append({
+            'id': article_id,
+            'title': article.get('title', ''),
+            'clicks': article_clicks_count
+        })
+
+        if article_clicks_count > stats['mostClicked']['clicks']:
+            stats['mostClicked'] = {'title': article.get('title', ''), 'clicks': article_clicks_count}
+
+    sort_handlers = {
+        'clicks_desc': lambda item: (-(item.get('clicks') or 0), (item.get('title') or '').lower()),
+        'clicks_asc': lambda item: ((item.get('clicks') or 0), (item.get('title') or '').lower()),
+        'title_asc': lambda item: (item.get('title') or '').lower(),
+        'title_desc': lambda item: (item.get('title') or '').lower()
+    }
+
+    if sort_key not in sort_handlers:
+        sort_key = 'clicks_desc'
+        stats['selectedSort'] = sort_key
+
+    if sort_key == 'title_desc':
+        stats['viewsPerArticle'] = sorted(stats['viewsPerArticle'], key=sort_handlers[sort_key], reverse=True)
+    else:
+        stats['viewsPerArticle'] = sorted(stats['viewsPerArticle'], key=sort_handlers[sort_key])
+
+    # Backward compatibility with older frontend fields.
+    stats['totalViews'] = stats['totalClicks']
+    stats['mostVisited'] = {
+        'title': stats['mostClicked'].get('title', ''),
+        'views': stats['mostClicked'].get('clicks', 0)
+    }
+    for item in stats['viewsPerArticle']:
+        item['views'] = item.get('clicks', 0)
+
+    stats['uniqueVisitors'] = len(unique_visitor_ids)
     return jsonify(stats)
 
 

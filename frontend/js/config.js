@@ -19,3 +19,45 @@ function resolveMediaUrl(src) {
 }
 
 console.log('Using API:', API_BASE_URL);
+
+function getPresenceClientId() {
+    const storageKey = 'website_presence_client_id';
+    let clientId = '';
+    try {
+        clientId = localStorage.getItem(storageKey) || '';
+    } catch (error) {
+        clientId = '';
+    }
+
+    if (!clientId) {
+        clientId = `c_${Math.random().toString(36).slice(2)}_${Date.now().toString(36)}`;
+        try {
+            localStorage.setItem(storageKey, clientId);
+        } catch (error) {
+            // Ignore localStorage write errors.
+        }
+    }
+    return clientId;
+}
+
+function sendPresencePing(pageName = 'unknown') {
+    const payload = {
+        clientId: getPresenceClientId(),
+        page: pageName
+    };
+    fetch(`${API_BASE_URL}/presence/ping`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        keepalive: true
+    }).catch(() => {
+        // Presence is best-effort only.
+    });
+}
+
+function startPresenceTracking(pageName = 'unknown') {
+    sendPresencePing(pageName);
+    setInterval(() => {
+        sendPresencePing(pageName);
+    }, 30000);
+}
