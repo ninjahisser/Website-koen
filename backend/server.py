@@ -531,7 +531,51 @@ def cms_deploy_server():
         'message': 'Deploy gestart. setup_vps.sh draait nu op de achtergrond en zal git sync + herstart uitvoeren.',
         'logPath': log_path
     })
-    return jsonify({'error': 'Article not found'}), 404
+
+
+@app.route('/api/cms/stop-server', methods=['POST'])
+def cms_stop_server():
+    if 'cms_authenticated' not in session or not session['cms_authenticated']:
+        return jsonify({'error': 'Niet geauthenticeerd'}), 401
+
+    if os.name != 'posix':
+        return jsonify({'error': 'Server stoppen via CMS is alleen beschikbaar op Linux/VPS.'}), 400
+
+    app_name = (os.getenv('APP_NAME') or 'studiomalem').strip() or 'studiomalem'
+    command_attempts = [
+        ['systemctl', 'stop', app_name],
+        ['sudo', 'systemctl', 'stop', app_name],
+        ['pkill', '-f', 'gunicorn.*server:app']
+    ]
+
+    failure_details = []
+
+    for command in command_attempts:
+        try:
+            result = subprocess.run(
+                command,
+                capture_output=True,
+                text=True,
+                timeout=20,
+                check=False
+            )
+            if result.returncode == 0:
+                command_text = ' '.join(command)
+                return jsonify({
+                    'success': True,
+                    'message': f'Server stop-actie uitgevoerd via: {command_text}'
+                })
+
+            stderr_text = (result.stderr or result.stdout or '').strip()
+            if stderr_text:
+                failure_details.append(f"{' '.join(command)} -> {stderr_text}")
+            else:
+                failure_details.append(f"{' '.join(command)} -> exitcode {result.returncode}")
+        except Exception as error:
+            failure_details.append(f"{' '.join(command)} -> {error}")
+
+    details = '; '.join(failure_details[:3])
+    return jsonify({'error': f'Kon server niet stoppen. {details}'}), 500
 
 
 @app.route('/api/articles/<article_id>', methods=['PUT'])

@@ -1169,6 +1169,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadSettingsBtn = document.getElementById('load-settings-btn');
     const saveSettingsBtn = document.getElementById('save-settings-btn');
     const deployServerBtn = document.getElementById('deploy-server-btn');
+    const stopServerBtn = document.getElementById('stop-server-btn');
     const cmsPasswordInput = document.getElementById('cmsPasswordInput');
     const stripeSecretInput = document.getElementById('stripeSecretKeyInput');
     const stripePublishableInput = document.getElementById('stripePublishableKeyInput');
@@ -1387,6 +1388,38 @@ document.addEventListener('DOMContentLoaded', () => {
                 settingsStatus.className = 'cms-status cms-status-error';
             } finally {
                 deployServerBtn.disabled = false;
+            }
+        });
+    }
+
+    if (stopServerBtn) {
+        stopServerBtn.addEventListener('click', async () => {
+            if (!confirm('Ben je zeker dat je de server volledig wilt stoppen? De website en CMS worden dan offline gezet tot je de service opnieuw start.')) {
+                return;
+            }
+
+            settingsStatus.textContent = 'Stop-actie wordt gestart...';
+            settingsStatus.className = 'cms-status';
+            stopServerBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/cms/stop-server', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || 'Server stoppen mislukt');
+                }
+                settingsStatus.textContent = data.message || 'Stop-actie gestart.';
+                settingsStatus.className = 'cms-status cms-status-success';
+            } catch (error) {
+                settingsStatus.textContent = error.message || 'Fout bij stoppen van server';
+                settingsStatus.className = 'cms-status cms-status-error';
+            } finally {
+                stopServerBtn.disabled = false;
             }
         });
     }
