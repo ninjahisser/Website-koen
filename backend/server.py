@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from html import escape
 import json
 import os
+import shutil
 import subprocess
 from functools import wraps
 
@@ -454,6 +455,15 @@ def cms_deploy_server():
     if not os.path.exists(script_path):
         return jsonify({'error': 'setup_vps.sh niet gevonden.'}), 404
 
+    bash_path = shutil.which('bash')
+    if not bash_path:
+        for fallback in ('/bin/bash', '/usr/bin/bash'):
+            if os.path.exists(fallback):
+                bash_path = fallback
+                break
+    if not bash_path:
+        return jsonify({'error': 'Kon deploy niet starten: bash niet gevonden op deze server. Installeer bash of gebruik een Linux omgeving met /bin/bash.'}), 500
+
     log_path = os.path.join(repo_root, 'deploy.log')
 
     try:
@@ -461,7 +471,7 @@ def cms_deploy_server():
         log_file.write(f'\n=== Deploy gestart via CMS op {datetime.now().isoformat()} ===\n')
         log_file.flush()
         subprocess.Popen(
-            ['bash', script_path],
+            [bash_path, script_path],
             cwd=repo_root,
             stdout=log_file,
             stderr=subprocess.STDOUT,
