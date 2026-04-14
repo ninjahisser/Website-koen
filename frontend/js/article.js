@@ -110,6 +110,12 @@ function buildShareMarkup(article) {
     `;
 }
 
+function renderShareSlot(article = null) {
+    if (!shareSlotEl) return;
+    shareSlotEl.innerHTML = buildShareMarkup(article || {});
+    wireShareActions(article || {});
+}
+
 function wireShareActions(article) {
     const shareRoot = shareSlotEl ? shareSlotEl.querySelector('.article-share') : null;
     if (!shareRoot) return;
@@ -251,6 +257,9 @@ async function loadHeaderCategories(activeCategory = '') {
 }
 
 async function loadArticle() {
+    // Render a resilient share button first so it is visible even if API calls fail.
+    renderShareSlot();
+
     const articleId = getArticleId();
     if (!articleId) {
         loadingEl.style.display = 'none';
@@ -267,9 +276,7 @@ async function loadArticle() {
         const article = await res.json();
         await loadHeaderCategories(getCategoryValue(article));
         const dateText = formatDate(article.created_at);
-        if (shareSlotEl) {
-            shareSlotEl.innerHTML = buildShareMarkup(article);
-        }
+        renderShareSlot(article);
 
         contentEl.innerHTML = `
             <div class="article-header">
@@ -288,13 +295,10 @@ async function loadArticle() {
         } else {
             contentEl.classList.remove('article-content-tekst');
         }
-        wireShareActions(article);
         loadingEl.style.display = 'none';
         contentEl.style.display = 'block';
     } catch (error) {
-        if (shareSlotEl) {
-            shareSlotEl.innerHTML = '';
-        }
+        renderShareSlot();
         loadingEl.style.display = 'none';
         errorEl.style.display = 'block';
         errorEl.textContent = `Fout bij laden: ${error.message}`;
